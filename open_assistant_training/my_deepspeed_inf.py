@@ -154,7 +154,7 @@ input_sentences = [
 batch_size = 1
 if batch_size > len(input_sentences):
     # dynamically extend to support larger bs by repetition
-    input_sentences *= math.ceil(.batch_size / len(input_sentences))
+    input_sentences *= math.ceil(batch_size / len(input_sentences))
 
 generate_kwargs = dict(max_new_tokens=num_tokens, do_sample=False)
 
