@@ -216,7 +216,7 @@ class ClassificationTransformer(BaseTransformer):
 
 
         loss, logits, labels, labels_mask = self._compute_loss(self.model, batch)
-        labels[~labels_mask.bool()] = self.pad()
+        # labels[~labels_mask.bool()] = self.pad()
 
         loss = loss.mean()
 
