@@ -33,7 +33,7 @@ def print_rank0(*msg,rank):
 
 def main(ckpt_path='new_model.pt',model_name='EleutherAI/pythia-125m-deduped',val_path='val.json',kwargs = dict(
     device_map="balanced_low_0",
-),batch_size=10,benchmark=None,max_source_length=512,target_length=150,hf_checkpoint=True,n_examples=21):
+),batch_size=10,benchmark=None,max_source_length=512,target_length=150,hf_checkpoint=False,n_examples=21):
     t_start = time.time()
     local_rank = int(os.getenv("LOCAL_RANK", "0"))
     world_size = torch.cuda.device_count()
