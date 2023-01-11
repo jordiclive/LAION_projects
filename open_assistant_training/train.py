@@ -234,7 +234,7 @@ class ClassificationTransformer(BaseTransformer):
             logger=True,
             sync_dist=True,
         )
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
         return {"loss": loss}
 
     def freeze_params(self, model):

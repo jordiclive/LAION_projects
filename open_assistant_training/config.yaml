@@ -27,6 +27,7 @@ generate: False
 #offline: True
 gpus: 8
 visible_devices: "0,1,2,3,4,5,6,7"
+resume_from_checkpoint: "/fsx/home-jordiclive/open_assistant_training/results/20230111_1503/epoch=0-step=120.ckpt"
 #val_metric: 'rouge2'
 
 # gpus: 0
