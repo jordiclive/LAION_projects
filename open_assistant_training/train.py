@@ -60,6 +60,11 @@ def add_newline_to_end_of_each_sentence(x: str) -> str:
     re.sub("<n>", "", x)  # remove pegasus newline char
     return "\n".join(nltk.sent_tokenize(x))
 
+def model_max_length(config):
+    """Returns the maximum generation length for the given model."""
+    return getattr(config, "n_positions", None) or getattr(
+        config, "max_position_embeddings", None
+    )
 
 def calculate_rouge(
         pred_lns: List[str],
@@ -302,7 +307,11 @@ class ClassificationTransformer(BaseTransformer):
             self, batch: dict, batch_idx=None, dataloader_idx=None
     ) -> dict:
 
+        mask = batch['label_masks']
+        input = batch['input_ids']
         loss = self._step(batch,batch_idx)
+
+
 
         self.log(
             "val_loss",
@@ -314,13 +323,206 @@ class ClassificationTransformer(BaseTransformer):
             sync_dist=True,
         )
 
-        if self.hparams.generate:
-            a = 1
-            #todo sort out generate
+        if batch_idx == 0:
+            for k in range(input.shape[0]):
+                prompt = self.tokenizer.decode(input[k][~mask[k]][:-1])
+                self.generate(prompt = prompt, max_length=100)
 
         return {"loss": loss}
 
+    def get_device(self) -> str:
+        """Getter for the current device where the model is located."""
+        return self.model.device.type
 
+    def generate(
+            self,
+            n: int = 1,
+            prompt: str = "",
+            prepend_bos: bool = None,
+            min_length: int = None,
+            max_length: int = 256,
+            temperature: float = 0.7,
+            do_sample: bool = True,
+            return_as_list: bool = False,
+            pad_token_id: str = None,
+            schema: str = False,
+            normalize_key: bool = True,
+            use_cache: bool = True,
+            lstrip: bool = True,
+            nonempty_output: bool = True,
+            skip_special_tokens: bool = True,
+            **kwargs,
+    ):
+        """
+        Generates texts using the stored Transformers model.
+        Currently generates text using the model's generate() function.
+
+        :param n: Numbers of texts to generate.
+        :param prompt: Text to force the generated text to start with
+        :param max_length: Maximum length for the generated text
+        :param temperature: Determines the "creativity" of the generated text.
+        The value range is different for each type of Transformer.
+        :param do_sample: Samples the text, which is what we want. If False,
+        the generated text will be the optimal prediction at each time,
+        and therefore deterministic.
+        :param return_as_list: Boolean which determine if text should be returned
+        as a list. If False, the generated texts will be print to console.
+        :param seed: A numeric seed which sets all randomness, allowing the
+        generate text to be reproducible if rerunning with same parameters
+        and model.
+        """
+
+        prompt_text = prompt
+        prompt_tensors = self.tokenizer(text=prompt, return_tensors="pt")
+
+        if prompt:
+            prompt_num_tokens = list(prompt_tensors["input_ids"].shape)[1]
+            assert prompt_num_tokens < model_max_length(
+                self.model.config
+            ), f"The prompt is too large for the model. ({prompt_num_tokens} tokens)"
+
+        input_ids = (
+            prompt_tensors["input_ids"].to(self.get_device()) if prompt else None
+        )
+
+        if prepend_bos is None:
+            prepend_bos = getattr(self.model.config, "line_by_line", None)
+
+        if prepend_bos:
+            bos = torch.tensor([[self.tokenizer.bos_token_id]]).to(self.get_device())
+            if prompt:
+                input_ids = torch.cat((bos, input_ids), dim=1)
+            else:
+                input_ids = bos
+
+
+
+        if pad_token_id is None:
+            pad_token_id = getattr(self.tokenizer, "pad_token_id", None) or getattr(
+                self.tokenizer, "eos_token_id", None
+            )
+
+        # prevent an error from using a length greater than the model
+        gen_max_length = model_max_length(self.model.config)
+        max_length = min(gen_max_length, max_length)
+
+        while True:
+            outputs = self.model.generate(
+                input_ids=input_ids,
+                min_length=min_length,
+                max_length=max_length,
+                temperature=temperature,
+                do_sample=do_sample,
+                num_return_sequences=n,
+                pad_token_id=pad_token_id,
+                use_cache=use_cache,
+                **kwargs,
+            )
+
+            # Schema token handling
+            if schema:
+                schema_tokens = getattr(self.model.config, "schema_tokens")
+                schema_return = getattr(self.model.config, "schema_return", None)
+                schema_tokens_enc = self.tokenizer(text=schema_tokens)["input_ids"]
+
+                nonalphanum_pattern = re.compile(r"[\W_]+", re.UNICODE)
+
+                outputs = outputs.tolist()
+                gen_texts = []
+                for output in outputs:
+                    gen_text_dict = {}
+
+                    # Get indices of each schema token within the text
+                    schema_token_indices = [
+                        (schema_tokens[i], find_index_of_subset(output, token_enc))
+                        for i, token_enc in enumerate(schema_tokens_enc)
+                    ]
+
+                    schema_token_indices.sort(key=lambda x: x[1])
+
+                    for i, token_tuple in enumerate(schema_token_indices):
+                        start_index = token_tuple[1]
+                        key = (
+                            nonalphanum_pattern.sub("", token_tuple[0])
+                            if normalize_key
+                            else token_tuple[0]
+                        )
+                        if start_index == -1:
+                            gen_text_dict[key] = ""
+                        else:
+                            end_index = (
+                                schema_token_indices[i + 1][1] - 1
+                                if i + 1 < len(schema_token_indices)
+                                else None
+                            )
+
+                            gen_text_dict[key] = self.tokenizer.decode(
+                                output[start_index:end_index], skip_special_tokens=True
+                            )
+
+                    # remove fields not in schema_return
+                    if schema_return:
+                        keys = gen_text_dict.keys()
+                        if len(schema_return) == 1:
+                            gen_text_dict = gen_text_dict[schema_return[0]]
+                        for key in keys:
+                            if key not in schema_return:
+                                gen_text_dict.pop(key, None)
+
+                    gen_texts.append(gen_text_dict)
+
+
+
+                if not return_as_list:
+                    print(*gen_texts, sep="\n" + "=" * 10 + "\n")
+                    break
+                else:
+                    if n > 1:
+                        return gen_texts
+                    else:
+                        return gen_texts[0]
+
+            # Typical use case
+            else:
+                gen_texts = self.tokenizer.batch_decode(
+                    outputs, skip_special_tokens=skip_special_tokens
+                )
+
+                # Handle stripping tokenization spaces w/ regex
+                if lstrip:
+                    gen_texts = [re.sub(r"^\s+", "", text) for text in gen_texts]
+
+                if nonempty_output:
+                    if min_length:
+                        gen_texts = list(
+                            filter(lambda x: len(x) > min_length, gen_texts)
+                        )
+                    else:
+                        gen_texts = list(filter(lambda x: len(x) > 0, gen_texts))
+
+                # if there is no generated text after cleanup, try again.
+                if len(gen_texts) == 0:
+                    continue
+
+
+
+                if not return_as_list:
+                    if prompt:
+                        # Bold the prompt if printing to console
+                        gen_texts = [
+                            text.replace(prompt_text, f"\033[1m{prompt_text}\033[0m", 1)
+                            for text in gen_texts
+                        ]
+
+                    if n > 1:
+                        print(*gen_texts, sep="\n" + "=" * 10 + "\n")
+                    else:
+                        print(gen_texts[0])
+                    break
+                else:
+                    return gen_texts
+
+    
 
     def calc_generative_metrics(self, preds, target) -> Dict:
         return calculate_rouge(preds, target)

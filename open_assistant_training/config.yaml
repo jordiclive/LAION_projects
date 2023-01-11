@@ -29,10 +29,10 @@ gpus: 1
 visible_devices: "0"
 #val_metric: 'rouge2'
 
-gpus: 0
-debug_mode: True
-offline: True
-local: True
+# gpus: 0
+# debug_mode: True
+# offline: True
+# local: True
 # save_generations: True
 
 #skip_val: True
