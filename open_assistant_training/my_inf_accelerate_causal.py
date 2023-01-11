@@ -31,7 +31,7 @@ def print_rank0(*msg,rank):
         return
     print(*msg)
 
-def main(ckpt_path='/fsx/home-jordiclive/open_assistant_training/checkpoint-curr-best_20230111_1614',model_name='EleutherAI/pythia-13b-deduped',val_path='val.json',kwargs = dict(
+def main(ckpt_path='new_model.pt',model_name='EleutherAI/pythia-125m-deduped',val_path='val.json',kwargs = dict(
     device_map="balanced_low_0",
 ),batch_size=10,benchmark=None,max_source_length=512,target_length=150,hf_checkpoint=True,n_examples=21):
     t_start = time.time()
