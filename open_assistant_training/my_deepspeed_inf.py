@@ -52,7 +52,7 @@ def print_rank0(*msg):
 ckpt_path='new_model_large.pt'
 model_name='EleutherAI/pythia-13b-deduped'
 val_path='val.json'
-hf_checkpoint = True
+hf_checkpoint = False
 n_examples = 20
 dtype = torch.float16
 kwargs = dict(
