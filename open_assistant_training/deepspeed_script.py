@@ -50,6 +50,7 @@ dtype = torch.float16
 kwargs = dict(
 
 )
+batch_size = 1
 kwargs["torch_dtype"] = dtype
 
 if hf_checkpoint:
@@ -139,7 +140,7 @@ model = ds_engine.module
 
 ### Generate
 
-print_rank0(f"*** Starting to generate {num_tokens} tokens with bs={args.batch_size}")
+print_rank0(f"*** Starting to generate {num_tokens} tokens with bs={batch_size}")
 
 input_sentences = [
     "DeepSpeed is a machine learning framework",
@@ -180,6 +181,20 @@ def generate():
 
     return zip(inputs, outputs, total_new_tokens)
 
+def chunks(xs, n):
+    n = max(1, n)
+    return (xs[i:i + n] for i in range(0, len(xs), n))
+inputs = list(chunks(inputs,n=batch_size))
+print(len(inputs[-1]))
+bs, cs, ds = [],[],[]
+for k in inputs:
+    b, c, d = generate(k)
+    bs.extend(b)
+    cs.extend(c)
+    ds.extend(d)
+
+df = pd.DataFrame({'source':bs,'prediction':cs,'target':list(val['target']), 'total_new_tokens':ds})
+df.to_csv(f'test_outputs_{ckpt_path}.csv',index=False)
 
 # XXX: this is currently doing world_size streams on world_size gpus, so we can feed it different inputs on each! and hence the time can be divided by world_size
 
