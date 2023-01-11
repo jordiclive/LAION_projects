@@ -53,6 +53,8 @@ def main(ckpt_path='new_model.pt',model_name='EleutherAI/pythia-125m-deduped',va
     else:
         tokenizer  = AutoTokenizer.from_pretrained("checkpoint-curr-best_20230111_1557")
         model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
+        model.resize_token_embeddings(len(tokenizer))
+
         model.load_state_dict(torch.load(ckpt_path))
 
     val = pd.read_json(val_path,orient='split')
