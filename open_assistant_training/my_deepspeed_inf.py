@@ -18,7 +18,6 @@ import torch.distributed as dist
 import deepspeed
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from transformers.deepspeed import HfDeepSpeedConfig
-from transformers.models.bloom.modeling_bloom import BloomBlock as BloomBlock
 
 
 t_start = time.time()
@@ -62,14 +61,14 @@ else:
 
     model.load_state_dict(torch.load(ckpt_path))
 
-# val = pd.read_json(val_path, orient='split')
-# val = val.sample(n=n_examples, random_state=1)
-# inputs = list(val['source'])
-# inputs = ['<question> ' + i.strip() + '<answer>' for i in inputs]
-# input_sentences = inputs
-#
-# print_rank0(f"*** Loading the model {model_name}")
-#
+val = pd.read_json(val_path, orient='split')
+val = val.sample(n=n_examples, random_state=1)
+inputs = list(val['source'])
+inputs = ['<question> ' + i.strip() + '<answer>' for i in inputs]
+input_sentences = inputs
+
+print_rank0(f"*** Loading the model {model_name}")
+
 #
 #
 # # XXX: can't automatically derive dtype via config's `from_pretrained`
