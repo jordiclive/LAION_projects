@@ -323,10 +323,10 @@ class ClassificationTransformer(BaseTransformer):
             sync_dist=True,
         )
 
-        if batch_idx == 0:
-            for k in range(input.shape[0]):
-                prompt = self.tokenizer.decode(input[k][~mask[k]][:-1])
-                self.generate(prompt = prompt, max_length=100)
+        # if batch_idx == 0:
+        #     for k in range(input.shape[0]):
+        #         prompt = self.tokenizer.decode(input[k][~mask[k]][:-1])
+        #         self.generate(prompt = prompt, max_length=100)
 #todo fix generation. left padding, max new tokens etc.
 
         return {"loss": loss}
@@ -553,9 +553,9 @@ class ClassificationTransformer(BaseTransformer):
         self.model.save_pretrained(save_path)
         self.tokenizer.save_pretrained(save_path)
 
-    def on_save_checkpoint(self, checkpoint):
-        path = f"checkpoint-curr-best_{time.strftime('%Y%m%d_%H%M')}"
-        self.save_hf(path)
+    # def on_save_checkpoint(self, checkpoint):
+    #     path = f"checkpoint-curr-best_{time.strftime('%Y%m%d_%H%M')}"
+    #     self.save_hf(path)
 
     def on_load_checkpoint(self, checkpoint):
         state_dict = checkpoint['module']
