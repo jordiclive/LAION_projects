@@ -1,0 +1,24 @@
+transformers==4.24.0
+pytorch_lightning==1.7.0rc0
+torch==1.9.0
+wandb
+tensorboard
+scikit-learn
+seqeval
+psutil
+tensorflow_datasets
+matplotlib
+faiss-cpu
+elasticsearch
+nltk
+pandas
+datasets >= 1.1.3
+fire
+pytest
+conllu
+sentencepiece != 0.1.92
+protobuf
+ray
+configargparse
+rouge_score
+deepspeed
