@@ -25,15 +25,7 @@ t_start = time.time()
 
 num_tokens = 100
 
-parser = ArgumentParser()
 
-parser.add_argument("--name", required=False, type=str, help="model_name")
-parser.add_argument("--local_rank", required=False, type=int, help="used by dist launchers")
-parser.add_argument("--batch_size", default=1, type=int, help="batch size")
-parser.add_argument("--benchmark", action="store_true", help="additionally run benchmark")
-parser.add_argument("--cpu_offload", action="store_true", help="whether to activate CPU offload")
-parser.add_argument("--nvme_offload_path", help="whether to activate NVME offload and the path on nvme")
-args = parser.parse_args()
 
 local_rank = int(os.getenv("LOCAL_RANK", "0"))
 world_size = int(os.getenv("WORLD_SIZE", "1"))
@@ -107,30 +99,30 @@ ds_config = {
     "wall_clock_breakdown": False,
 }
 
-if args.cpu_offload and args.nvme_offload_path:
-    raise ValueError("Use one of --cpu_offload or --nvme_offload_path and not both")
-
-if args.cpu_offload:
-    ds_config["zero_optimization"]["offload_param"] = dict(device="cpu", pin_memory=True)
-
-if args.nvme_offload_path:
-    ds_config["zero_optimization"]["offload_param"] = dict(
-        device="nvme",
-        pin_memory=True,
-        nvme_path=args.nvme_offload_path,
-        buffer_size=4e9,
-    )
+# if args.cpu_offload and args.nvme_offload_path:
+#     raise ValueError("Use one of --cpu_offload or --nvme_offload_path and not both")
+#
+# if args.cpu_offload:
+#     ds_config["zero_optimization"]["offload_param"] = dict(device="cpu", pin_memory=True)
+#
+# if args.nvme_offload_path:
+#     ds_config["zero_optimization"]["offload_param"] = dict(
+#         device="nvme",
+#         pin_memory=True,
+#         nvme_path=args.nvme_offload_path,
+#         buffer_size=4e9,
+#     )
 
 dschf = HfDeepSpeedConfig(ds_config)  # this tells from_pretrained to instantiate directly on gpus
 
-if args.benchmark:
-    torch.cuda.empty_cache()
-    gc.collect()
-    deepspeed.runtime.utils.see_memory_usage("pre-from-pretrained", force=True)
+
+torch.cuda.empty_cache()
+gc.collect()
+deepspeed.runtime.utils.see_memory_usage("pre-from-pretrained", force=True)
 
 
-if args.benchmark:
-    deepspeed.runtime.utils.see_memory_usage("post-from-pretrained", force=True)
+# if args.benchmark:
+#     deepspeed.runtime.utils.see_memory_usage("post-from-pretrained", force=True)
 
 model = model.eval()
 
@@ -140,10 +132,10 @@ ds_engine = deepspeed.initialize(model=model, config_params=ds_config)[0]
 ds_engine.module.eval()
 model = ds_engine.module
 
-if args.benchmark:
-    t_ready = time.time()
-    deepspeed.runtime.utils.see_memory_usage("start-of-generate", force=True)
-
+# if args.benchmark:
+#     t_ready = time.time()
+#     deepspeed.runtime.utils.see_memory_usage("start-of-generate", force=True)
+#
 
 ### Generate
 
@@ -159,15 +151,15 @@ input_sentences = [
     "In the far far distance from our galaxy,",
     "Peace is the only way",
 ]
-
-if args.batch_size > len(input_sentences):
+batch_size = 1
+if batch_size > len(input_sentences):
     # dynamically extend to support larger bs by repetition
-    input_sentences *= math.ceil(args.batch_size / len(input_sentences))
+    input_sentences *= math.ceil(.batch_size / len(input_sentences))
 
 generate_kwargs = dict(max_new_tokens=num_tokens, do_sample=False)
 
 print_rank0(f"Generate args {generate_kwargs}")
-inputs = input_sentences[: args.batch_size]
+inputs = input_sentences[: batch_size]
 
 
 def generate():
@@ -201,7 +193,7 @@ for i, o, _ in pairs:
 
 ### Benchmark
 
-if args.benchmark:
+
     # clear cache / free memory
     torch.cuda.empty_cache()
     gc.collect()
@@ -230,8 +222,5 @@ if args.benchmark:
         f"""
 *** Performance stats:
 Throughput per token including tokenize: {througput*1000:.2f} msecs
-Start to ready to generate: {t_ready - t_start:.3f} secs
-Tokenize and generate {total_new_tokens_generated} (bs={args.batch_size}) tokens: {t_generate_span:.3f} secs
-Start to finish: {t_ready - t_start + t_generate_span:.3f} secs
 """
     )
