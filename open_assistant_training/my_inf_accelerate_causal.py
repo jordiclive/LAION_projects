@@ -75,7 +75,7 @@ def main(ckpt_path='new_model_large.pt',model_name='EleutherAI/pythia-13b-dedupe
 
     generate_kwargs = dict(use_cache=True,
                 #decoder_start_token_id=model.decoder_start_token_id,
-                num_beams=5,
+                num_beams=1,
                 min_length=5,
                 max_new_tokens=target_length,
                 no_repeat_ngram_size = 3,
@@ -94,7 +94,7 @@ def main(ckpt_path='new_model_large.pt',model_name='EleutherAI/pythia-13b-dedupe
             if torch.is_tensor(input_tokens[t]):
                 input_tokens[t] = input_tokens[t].to("cuda:0")
 
-        outputs = model.generate(**input_tokens, num_beams=5, max_new_tokens=150, min_length=5)
+        outputs = model.generate(**input_tokens, num_beams=1, max_new_tokens=150, min_length=5)
 
         input_tokens_lengths = [x.shape[0] for x in input_tokens.input_ids]
         output_tokens_lengths = [x.shape[0] for x in outputs]
