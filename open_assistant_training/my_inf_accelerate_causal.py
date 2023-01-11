@@ -51,7 +51,7 @@ def main(ckpt_path='new_model.pt',model_name='EleutherAI/pythia-125m-deduped',va
         tokenizer = AutoTokenizer.from_pretrained(ckpt_path)
         model = AutoModelForCausalLM.from_pretrained(ckpt_path, **kwargs)
     else:
-        tokenizer  = AutoTokenizer.from_pretrained(model_name)
+        tokenizer  = AutoTokenizer.from_pretrained("checkpoint-curr-best_20230111_1557")
         model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
         model.load_state_dict(torch.load(ckpt_path))
 
