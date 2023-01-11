@@ -432,7 +432,7 @@ def generic_train(
     # train_params["accelerator"] = extra_train_kwargs.get("accelerator", None)
 
     train_params["accumulate_grad_batches"] = model.hparams.accumulate_grad_batches
-    train_params["precision"] = "bf16"
+    train_params["precision"] = "16"
     train_params["strategy"] = "deepspeed_stage_2"
     # from pytorch_lightning.strategies import DeepSpeedStrategy
     # train_params["strategy"] = DeepSpeedStrategy(
