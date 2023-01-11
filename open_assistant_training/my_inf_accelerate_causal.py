@@ -55,10 +55,10 @@ def main(ckpt_path='checkpoint-curr-best_20230111_1557',model_name='EleutherAI/p
         model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
         model.load_state_dict(torch.load(ckpt_path)["state_dict"])
 
-    val = pd.read_json(val_path)
+    val = pd.read_json(val_path,orient='split')
     val = val.sample(n=n_examples,random_state=1)
     inputs = list(val['source'])
-    inputs = ['<question> ' + i.strip() + ' <answer> ' for i in inputs]
+    inputs = ['<question> ' + i.strip() + '<answer>' for i in inputs]
     input_sentences = inputs
     if batch_size > len(input_sentences):
         # dynamically extend to support larger bs by repetition
