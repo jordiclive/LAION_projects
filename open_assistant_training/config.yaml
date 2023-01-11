@@ -1,10 +1,10 @@
 #model_name_or_path: 't5-large'
-model_name_or_path: 'EleutherAI/pythia-19m-deduped'
+model_name_or_path: 'EleutherAI/pythia-125m-deduped'
 train_batch_size: 5
 eval_batch_size: 6
 logger: wandb
-warmup_steps: 2000
-learning_rate: 7e-4
+warmup_steps: 20
+learning_rate: 1e-5
 num_train_epochs: 10
 gradient_accumulation_steps: 5
 num_workers: 8
@@ -23,10 +23,10 @@ eval_max_gen_length: 150
 num_sanity_val_steps: -1
 test_outputs: outputs
 eval_min_length: 5
-generate: True
+generate: False
 #offline: True
-#gpus: 8
-#visible_devices: "0,1,2,3,4,5,6,7"
+gpus: 1
+visible_devices: "0"
 #val_metric: 'rouge2'
 
 gpus: 0

@@ -535,10 +535,10 @@ def main():
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_devices
     if args.offline or args.local:
-        os.environ['WANDB_API_KEY'] = 'd8216641d549f9bb3d0c5074baa39e15dfd55030'
+#         os.environ['WANDB_API_KEY'] = 'd8216641d549f9bb3d0c5074baa39e15dfd55030'
         os.environ["WANDB_MODE"] = "offline"
     else:
-        os.environ['WANDB_API_KEY'] = 'd8216641d549f9bb3d0c5074baa39e15dfd55030'
+        a = 1
 
     if args.output_dir is None:
         args.output_dir = os.path.join(

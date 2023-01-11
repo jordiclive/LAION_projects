@@ -199,15 +199,15 @@ class BaseTransformer(pl.LightningModule):
         from deepspeed.ops.adam import FusedAdam
         # self.opt = OnebitAdam(self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon)
 
-        # self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
+        self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
         # self.opt = AdamW(
         #         self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon
         #     )
-        self.opt = AdamW(
-                self.model.parameters(),
-                lr=self.hparams.learning_rate,
-                eps=self.hparams.adam_epsilon,
-            )
+#         self.opt = AdamW(
+#                 self.model.parameters(),
+#                 lr=self.hparams.learning_rate,
+#                 eps=self.hparams.adam_epsilon,
+#             )
         # scheduler = self.get_lr_scheduler()
 
         # return self.opt#, [scheduler]
@@ -476,6 +476,7 @@ def generic_train(
     # train_params['auto_scale_batch_size'] =True
     if args.logger_name == "wandb":
         from pytorch_lightning.loggers import WandbLogger
+        wandb.login(key='d8216641d549f9bb3d0c5074baa39e15dfd55030')
 
         if args.id is not None:
             id_ = args.id
