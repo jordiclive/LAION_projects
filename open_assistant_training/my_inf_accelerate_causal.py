@@ -53,7 +53,7 @@ def main(ckpt_path='new_model.pt',model_name='EleutherAI/pythia-125m-deduped',va
     else:
         tokenizer  = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
-        model.load_state_dict(torch.load(ckpt_path)["state_dict"])
+        model.load_state_dict(torch.load(ckpt_path))
 
     val = pd.read_json(val_path,orient='split')
     val = val.sample(n=n_examples,random_state=1)
