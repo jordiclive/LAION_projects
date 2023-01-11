@@ -30,8 +30,9 @@ def print_rank0(*msg,rank):
     if rank != 0:
         return
     print(*msg)
-
-def main(ckpt_path='new_model.pt',model_name='EleutherAI/pythia-125m-deduped',val_path='val.json',kwargs = dict(
+#EleutherAI/pythia-13b-deduped
+#EleutherAI/pythia-125m-deduped
+def main(ckpt_path='new_model_large.pt',model_name='EleutherAI/pythia-13b-deduped',val_path='val.json',kwargs = dict(
     device_map="balanced_low_0",
 ),batch_size=10,benchmark=None,max_source_length=512,target_length=150,hf_checkpoint=False,n_examples=21):
     t_start = time.time()
