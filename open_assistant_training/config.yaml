@@ -1,23 +1,23 @@
 #model_name_or_path: 't5-large'
-model_name_or_path: 'EleutherAI/pythia-125m-deduped'
-train_batch_size: 5
-eval_batch_size: 6
+model_name_or_path: 'EleutherAI/pythia-13b-deduped'
+train_batch_size: 3
+eval_batch_size: 3
 logger: wandb
 warmup_steps: 20
 learning_rate: 1e-5
-num_train_epochs: 10
-gradient_accumulation_steps: 5
+num_train_epochs: 4
+gradient_accumulation_steps: 12
 num_workers: 8
 adam_epsilon: 1e-8
 data_path: '.'
-wb_name: "test_saving"
+wb_name: "pythia-13b-deduped-chat_dialogue_dataset"
 wb_project: "OpenAssistant"
-wb_entity: "jordanclive"
+wb_entity: "open-assistant"
 val_check_interval: 0.25
 #skip_val: True
 #limit_val_batches: None
 label_smoothing: 0
-max_seq_length: 512
+max_seq_length: 300
 max_target_length: 150
 eval_max_gen_length: 150
 num_sanity_val_steps: -1
@@ -25,8 +25,8 @@ test_outputs: outputs
 eval_min_length: 5
 generate: False
 #offline: True
-gpus: 1
-visible_devices: "0"
+gpus: 8
+visible_devices: "0,1,2,3,4,5,6,7"
 #val_metric: 'rouge2'
 
 # gpus: 0

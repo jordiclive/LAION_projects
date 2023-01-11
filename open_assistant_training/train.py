@@ -327,6 +327,7 @@ class ClassificationTransformer(BaseTransformer):
             for k in range(input.shape[0]):
                 prompt = self.tokenizer.decode(input[k][~mask[k]][:-1])
                 self.generate(prompt = prompt, max_length=100)
+#todo fix generation. left padding, max new tokens etc.
 
         return {"loss": loss}
 
