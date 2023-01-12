@@ -10,6 +10,7 @@ import torch.nn as nn
 import wandb
 from pytorch_lightning import Trainer
 from pytorch_lightning.plugins import DeepSpeedPlugin
+from pytorch_lightning.strategies import DeepSpeedStrategy
 from pytorch_lightning.utilities import rank_zero_info, rank_zero_only
 from transformers import (AdamW, AutoConfig, AutoModel,
                           AutoModelForPreTraining,
@@ -110,6 +111,7 @@ class BaseTransformer(pl.LightningModule):
                 from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
                 config=self.config,
                 cache_dir=cache_dir,
+                torch_dtype=torch.float16
             )
 
         else:
@@ -447,15 +449,67 @@ def generic_train(
     # train_params["strategy"] = strategy
     # if args.gpus > 1:
     #     train_params["strategy"] = "ddp"
-
+    ds_config = {
+    "fp16": {
+        "enabled": "auto",
+        "loss_scale": 0,
+        "loss_scale_window": 1000,
+        "initial_scale_power": 8,
+        "hysteresis": 2,
+        "min_loss_scale": 1
+    },
+    "optimizer": {
+        "type": "AdamW",
+        "params": {
+            "lr": "auto",
+            "betas": "auto",
+            "eps": "auto",
+            "weight_decay": "auto"
+        }
+    },
+    "scheduler": {
+        "type": "WarmupLR",
+        "params": {
+            "warmup_min_lr": "auto",
+            "warmup_max_lr": "auto",
+            "warmup_num_steps": "auto"
+        }
+    },
+    "zero_optimization": {
+        "stage": 3,
+        "allgather_partitions": True,
+        "allgather_bucket_size": 2e8,
+        "overlap_comm": True,
+        "reduce_scatter": True,
+        "reduce_bucket_size": 2e8,
+        "contiguous_gradients": True,
+        "offload_optimizer": {
+        "device": "cpu",
+        "pin_memory": True
+    }
+    },
+    "gradient_accumulation_steps": "auto",
+    "gradient_clipping": "auto",
+    "steps_per_print": 2000,
+    "train_batch_size": "auto",
+    "train_micro_batch_size_per_gpu": "auto",
+    "wall_clock_breakdown": False
+}
+    DeepSpeedStrategy(config=ds_config)
     if model.hparams.deepspeed_stage_3:
         train_params["strategy"] = DeepSpeedPlugin(
-            stage=3,
+            stage=2,
             offload_optimizer=True,
-            offload_parameters=True,
+            offload_parameters=False,
             load_full_weights=True,
         )
-        train_params["strategy"] = "ddp_sharded"
+        # train_params["strategy"] = "ddp_sharded"
+    # train_params["strategy"] = DeepSpeedPlugin(
+    #     stage=2,
+    #     offload_optimizer=True,
+    #     offload_parameters=False,
+    #     load_full_weights=True,
+    # )
 
     train_params["profiler"] = extra_train_kwargs.get("profiler", None)
     train_params["gradient_clip_val"] = args.gradient_clip_val
