@@ -7,7 +7,15 @@ import argparse
 model = "hf_checkpoint/"
 
 model = AutoModelForCausalLM.from_pretrained(model).half().to("cuda")
-tokenizer = AutoTokenizer.from_pretrained(model)
+tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-13b-deduped')
+tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+QA_SPECIAL_TOKENS = {"Question": "<question>", "Answer": "<answer>"}
+new_tokens = ['<question>', '<answer>']
+new_tokens_vocab = {}
+new_tokens_vocab["additional_special_tokens"] = []
+for idx, t in enumerate(new_tokens):
+    new_tokens_vocab["additional_special_tokens"].append(t)
+num_added_toks = tokenizer.add_special_tokens(new_tokens_vocab)
 
 
 while True:
