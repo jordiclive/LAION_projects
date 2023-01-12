@@ -32,6 +32,7 @@ from huggingface_hub import snapshot_download
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from transformers.models.bloom.modeling_bloom import BloomBlock as BloomBlock
 from transformers.utils import is_offline_mode
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 
 
 # the Deepspeed team made these so it's super fast to load (~1 minute), rather than wait 10-20min loading time.
