@@ -1,12 +1,12 @@
-from transformers import GPTNeoXForCausalLM, GPTNeoForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, GPTNeoForCausalLM, AutoTokenizer
 import argparse
 
 #parser = argparse.ArgumentParser()
 #parser.add_argument("model")
 #args = parser.parse_args()
-model = "/admin/home-jordiclive/LAION_projects/open_assistant_training/hf_checkpoint/"
+model = "hf_checkpoint/"
 
-model = GPTNeoXForCausalLM.from_pretrained(model).half().to("cuda")
+model = AutoModelForCausalLM.from_pretrained(model).half().to("cuda")
 tokenizer = AutoTokenizer.from_pretrained(model)
 
 
