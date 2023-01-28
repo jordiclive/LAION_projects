@@ -384,14 +384,14 @@ class ClassificationTransformer(BaseTransformer):
         self.model.save_pretrained(save_path, torch_dtype=self.dtype)
         self.tokenizer.save_pretrained(save_path)
 
-    def on_save_checkpoint(self, checkpoint):
-        path = f"checkpoint-curr-best_{time.strftime('%Y%m%d_%H%M')}"
-        self.save_hf(path)
+#     def on_save_checkpoint(self, checkpoint):
+#         path = f"checkpoint-curr-best_{time.strftime('%Y%m%d_%H%M')}"
+#         self.save_hf(path)
 
-    def on_load_checkpoint(self, checkpoint):
-        state_dict = checkpoint['module']
-        state_dict = {k.partition('module.')[2]: state_dict[k] for k in state_dict.keys()}
-        checkpoint['state_dict'] = state_dict
+#     def on_load_checkpoint(self, checkpoint):
+#         state_dict = checkpoint['module']
+#         state_dict = {k.partition('module.')[2]: state_dict[k] for k in state_dict.keys()}
+#         checkpoint['state_dict'] = state_dict
 
     @staticmethod
     def flatten(all_g, col):
