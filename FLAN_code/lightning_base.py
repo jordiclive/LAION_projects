@@ -25,6 +25,7 @@ from transformers.utils.versions import require_version
 from pytorch_lightning.callbacks import LearningRateMonitor
 
 import deepspeed
+
 logger = logging.getLogger(__name__)
 
 require_version("pytorch_lightning>=1.0.4")
@@ -53,13 +54,13 @@ arg_to_scheduler_metavar = "{" + ", ".join(arg_to_scheduler_choices) + "}"
 
 class BaseTransformer(pl.LightningModule):
     def __init__(
-        self,
-        hparams: argparse.Namespace,
-        config=None,
-        tokenizer=None,
-        num_labels=None,
-        model=None,
-        **config_kwargs,
+            self,
+            hparams: argparse.Namespace,
+            config=None,
+            tokenizer=None,
+            num_labels=None,
+            model=None,
+            **config_kwargs,
     ):
         """Initialize a model, tokenizer and config."""
         super().__init__()
@@ -103,12 +104,17 @@ class BaseTransformer(pl.LightningModule):
             )
         else:
             self.tokenizer: PreTrainedTokenizer = tokenizer
+        if self.hparams.dtype == "bf16":
+            self.dtype = torch.bfloat16
+        else:
+            self.dtype = torch.float16
         if model is None:
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
                 self.hparams.model_name_or_path,
                 from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
                 config=self.config,
                 cache_dir=cache_dir,
+                torch_dtype=self.dtype,
             )
 
         else:
@@ -119,10 +125,10 @@ class BaseTransformer(pl.LightningModule):
             "test": self.hparams.test_max_target_length,
         }
         assert (
-            self.target_lens["train"] <= self.target_lens["val"]
+                self.target_lens["train"] <= self.target_lens["val"]
         ), f"target_lens: {self.target_lens}"
         assert (
-            self.target_lens["train"] <= self.target_lens["test"]
+                self.target_lens["train"] <= self.target_lens["test"]
         ), f"target_lens: {self.target_lens}"
 
     def get_lr_scheduler(self):
@@ -183,7 +189,7 @@ class BaseTransformer(pl.LightningModule):
         from deepspeed.ops.adam import FusedAdam
         # self.opt = OnebitAdam(self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon)
 
-        self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon)
+        self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
         # self.opt = AdamW(
         #         self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon
         #     )
@@ -335,7 +341,7 @@ def add_generic_args(parser, root_dir) -> None:
         type=str,
         default="O2",
         help="For fp16: Apex AMP optimization level selected in ['O0', 'O1', 'O2', and 'O3']."
-        "See details at https://nvidia.github.io/apex/amp.html",
+             "See details at https://nvidia.github.io/apex/amp.html",
     )
     parser.add_argument("--n_tpu_cores", dest="tpu_cores", type=int)
     parser.add_argument(
@@ -385,14 +391,14 @@ def add_generic_args(parser, root_dir) -> None:
 
 
 def generic_train(
-    model: BaseTransformer,
-    args: argparse.Namespace,
-    early_stopping_callback=None,
-    logger=True,  # can pass WandbLogger() here
-    extra_callbacks=[],
-    checkpoint_callback=None,
-    logging_callback=None,
-    **extra_train_kwargs,
+        model: BaseTransformer,
+        args: argparse.Namespace,
+        early_stopping_callback=None,
+        logger=True,  # can pass WandbLogger() here
+        extra_callbacks=[],
+        checkpoint_callback=None,
+        logging_callback=None,
+        **extra_train_kwargs,
 ):
     pl.seed_everything(args.seed)
 
@@ -405,9 +411,7 @@ def generic_train(
         mode="min",
         save_top_k=1,
     )
-    
 
-    
     train_params = {}
 
     # if args.fp16:
@@ -418,7 +422,7 @@ def generic_train(
     # train_params["accelerator"] = extra_train_kwargs.get("accelerator", None)
 
     train_params["accumulate_grad_batches"] = model.hparams.accumulate_grad_batches
-    train_params["precision"] = "bf16"
+    train_params["precision"] = args.precision
     train_params["strategy"] = "deepspeed_stage_2"
     # from pytorch_lightning.strategies import DeepSpeedStrategy
     # train_params["strategy"] = DeepSpeedStrategy(
@@ -459,7 +463,7 @@ def generic_train(
     if args.debug_mode:
         train_params["limit_train_batches"] = 100
         train_params["limit_val_batches"] = 30
-   # train_params['auto_scale_batch_size'] =True
+    # train_params['auto_scale_batch_size'] =True
     if args.logger_name == "wandb":
         from pytorch_lightning.loggers import WandbLogger
 
@@ -473,7 +477,7 @@ def generic_train(
     lr_monitor = LearningRateMonitor(logging_interval='step')
     trainer = pl.Trainer.from_argparse_args(
         args,
-        callbacks=[checkpoint_callback,lr_monitor],
+        callbacks=[checkpoint_callback, lr_monitor],
         logger=logger,
         **train_params,
     )

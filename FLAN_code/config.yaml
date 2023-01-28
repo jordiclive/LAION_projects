@@ -24,11 +24,11 @@ freeze_embeds: True
 num_sanity_val_steps: -1
 test_outputs: outputs
 eval_min_length: 5
-generate: True
 #offline: True
 gpus: 8
 visible_devices: "0,1,2,3,4,5,6,7"
 val_metric: 'rouge2'
+precision: 'bf16'
 
 #debug_mode: True
 # save_generations: True

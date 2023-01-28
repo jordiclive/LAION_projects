@@ -21,11 +21,12 @@ from pytorch_lightning.utilities import rank_zero_info, rank_zero_only
 from rouge_score import rouge_scorer, scoring
 from torch.utils.data import DataLoader
 from transformers.models.bart.modeling_bart import shift_tokens_right
+
 logger = logging.getLogger(__name__)
 ROUGE_KEYS = ["rouge1", "rouge2", "rougeL", "rougeLsum"]
 
-
 import pickle
+
 
 def pickle_load(path):
     """pickle.load(path)"""
@@ -46,13 +47,13 @@ def add_newline_to_end_of_each_sentence(x: str) -> str:
 
 
 def calculate_rouge(
-    pred_lns: List[str],
-    tgt_lns: List[str],
-    use_stemmer=True,
-    rouge_keys=ROUGE_KEYS,
-    return_precision_and_recall=False,
-    bootstrap_aggregation=True,
-    newline_sep=True,
+        pred_lns: List[str],
+        tgt_lns: List[str],
+        use_stemmer=True,
+        rouge_keys=ROUGE_KEYS,
+        return_precision_and_recall=False,
+        bootstrap_aggregation=True,
+        newline_sep=True,
 ) -> Dict:
     """Calculate rouge using rouge_scorer package.
     Args:
@@ -149,7 +150,7 @@ class ClassificationTransformer(BaseTransformer):
             else self.hparams.eval_beams
         )
         assert (
-            self.eval_beams >= 1
+                self.eval_beams >= 1
         ), f"got self.eval_beams={self.eval_beams}. Need an integer > 1"
 
         if self.hparams.eval_max_gen_length is not None:
@@ -173,7 +174,7 @@ class ClassificationTransformer(BaseTransformer):
             rank_zero_info('FREEZING embeddings')
             self.freeze_embeds()
 
-    def freeze_params(self,model):
+    def freeze_params(self, model):
         """Set requires_grad=False for each of model.parameters()"""
         for par in model.parameters():
             par.requires_grad = False
@@ -184,7 +185,6 @@ class ClassificationTransformer(BaseTransformer):
         for d in [self.model.encoder, self.model.decoder]:
             self.freeze_params(d.embed_tokens)
             self.freeze_params(self.model.shared)
-            
 
     def ids_to_clean_text(self, generated_ids: List[int]):
         gen_text = self.tokenizer.batch_decode(
@@ -242,13 +242,13 @@ class ClassificationTransformer(BaseTransformer):
 
         # logs = {"loss": loss}
         # tokens per batch
-        #logs["tpb"] = (
+        # logs["tpb"] = (
         #    batch["input_ids"].ne(self.pad).sum() + batch["labels"].ne(self.pad).sum()
-        #)
-       # logs["bs"] = batch["input_ids"].shape[0]
-       # logs["src_pad_tok"] = batch["input_ids"].eq(self.pad).sum()
-       # logs["src_pad_frac"] = batch["input_ids"].eq(self.pad).float().mean()
-    
+        # )
+        # logs["bs"] = batch["input_ids"].shape[0]
+        # logs["src_pad_tok"] = batch["input_ids"].eq(self.pad).sum()
+        # logs["src_pad_frac"] = batch["input_ids"].eq(self.pad).float().mean()
+
         # for k,v in logs.items():
         #     self.log(k,v,sync_dist=True)
         # self.log(
@@ -260,7 +260,7 @@ class ClassificationTransformer(BaseTransformer):
         return {"loss": loss}
 
     def get_dataloader(
-        self, mode: str, batch_size: int, shuffle: bool = False
+            self, mode: str, batch_size: int, shuffle: bool = False
     ) -> DataLoader:
         "Load datasets. Called after prepare data."
         rank_zero_info(f"batch_size: {batch_size}")
@@ -272,7 +272,7 @@ class ClassificationTransformer(BaseTransformer):
                 data,
                 self.tokenizer,
                 input_length=self.hparams.max_seq_length,
-                output_length=self.hparams.max_target_length,val=True
+                output_length=self.hparams.max_target_length, val=True
             )
 
             val = DataLoader(
@@ -302,16 +302,16 @@ class ClassificationTransformer(BaseTransformer):
     # @rank_zero_only
     def validation_step(self, batch, batch_idx):
         if self.hparams.skip_val:
-            return {'loss':1}
+            return {'loss': 1}
         if self.hparams.hf_checkpoint:
             save_path = Path(self.output_dir).joinpath("checkpoint-curr-best")
             self.model.save_pretrained(save_path)
             self.tokenizer.save_pretrained(save_path)
             raise ValueError("just saving")
-        return self._generative_step(batch,batch_idx)
+        return self._generative_step(batch, batch_idx)
 
     def _generative_step(
-        self, batch: dict, batch_idx=None, dataloader_idx=None
+            self, batch: dict, batch_idx=None, dataloader_idx=None
     ) -> dict:
 
         loss = self._step(batch)[0]
@@ -326,36 +326,35 @@ class ClassificationTransformer(BaseTransformer):
             sync_dist=True,
         )
 
-        if self.hparams.generate:
-            if batch_idx == 0:
-
-                t0 = time.time()
-                generated_ids = self.model.generate(
-                    batch["input_ids"],
-                    attention_mask=batch["attention_mask"],
-                    use_cache=True,
-                    length_penalty=self.hparams.length_penalty,
-                    decoder_start_token_id=self.decoder_start_token_id,
-                    num_beams=self.eval_beams,
-                    min_length=self.eval_min_length,
-                    max_length=self.eval_max_length,
-                    no_repeat_ngram_size = self.hparams.no_repeat_ngram_size,
-                    # repetition_penalty = self.hparams.repetition_penalty,
-                )
-                preds: List[str] = self.ids_to_clean_text(generated_ids)
-                target: List[str] = self.ids_to_clean_text(batch["labels"])
-                rouge: Dict = self.calc_generative_metrics(preds, target)
-                self.log(
-                    self.val_metric,
-                    rouge[self.val_metric],
-                    on_step=True,
-                    on_epoch=True,
-                    prog_bar=True,
-                    logger=True,
-                    sync_dist=True,
-                )
+        # if self.hparams.generate:
+        #     if batch_idx == 0:
+        #
+        #         t0 = time.time()
+        #         generated_ids = self.model.generate(
+        #             batch["input_ids"],
+        #             attention_mask=batch["attention_mask"],
+        #             use_cache=True,
+        #             length_penalty=self.hparams.length_penalty,
+        #             decoder_start_token_id=self.decoder_start_token_id,
+        #             num_beams=self.eval_beams,
+        #             min_length=self.eval_min_length,
+        #             max_length=self.eval_max_length,
+        #             no_repeat_ngram_size = self.hparams.no_repeat_ngram_size,
+        #             # repetition_penalty = self.hparams.repetition_penalty,
+        #         )
+        #         preds: List[str] = self.ids_to_clean_text(generated_ids)
+        #         target: List[str] = self.ids_to_clean_text(batch["labels"])
+        #         rouge: Dict = self.calc_generative_metrics(preds, target)
+        #         self.log(
+        #             self.val_metric,
+        #             rouge[self.val_metric],
+        #             on_step=True,
+        #             on_epoch=True,
+        #             prog_bar=True,
+        #             logger=True,
+        #             sync_dist=True,
+        #         )
         return {"loss": loss}
-
 
     def calc_generative_metrics(self, preds, target) -> Dict:
         return calculate_rouge(preds, target)
@@ -369,9 +368,9 @@ class ClassificationTransformer(BaseTransformer):
         num_devices = max(1, self.hparams.gpus)
 
         effective_batch_size = (
-            self.hparams.train_batch_size
-            * self.hparams.accumulate_grad_batches
-            * num_devices
+                self.hparams.train_batch_size
+                * self.hparams.accumulate_grad_batches
+                * num_devices
         )
 
         return (self.dataset_size / effective_batch_size) * self.hparams.max_epochs
@@ -382,7 +381,7 @@ class ClassificationTransformer(BaseTransformer):
         rank_zero_info(path)
         save_path = Path(self.hparams.save_path).joinpath(path)
         self.save_path = save_path
-        self.model.save_pretrained(save_path)
+        self.model.save_pretrained(save_path, torch_dtype=self.dtype)
         self.tokenizer.save_pretrained(save_path)
 
     def on_save_checkpoint(self, checkpoint):
@@ -395,11 +394,10 @@ class ClassificationTransformer(BaseTransformer):
         checkpoint['state_dict'] = state_dict
 
     @staticmethod
-    def flatten(all_g,col):
+    def flatten(all_g, col):
         l = [x[col] for x in all_g]
         flat_list = [item for sublist in l for item in sublist]
         return flat_list
-
 
     def validation_epoch_end(self, outputs: list) -> dict:
         if self.hparams.skip_val:
@@ -415,7 +413,7 @@ class ClassificationTransformer(BaseTransformer):
             default=112,
             type=int,
             help="The maximum total input sequence length after tokenization. Sequences longer "
-            "than this will be truncated, sequences shorter will be padded.",
+                 "than this will be truncated, sequences shorter will be padded.",
         )
 
         parser.add_argument(
@@ -454,14 +452,14 @@ class ClassificationTransformer(BaseTransformer):
             default=512,  # 1024
             type=int,
             help="The maximum total input sequence length after tokenization. Sequences longer "
-            "than this will be truncated, sequences shorter will be padded.",
+                 "than this will be truncated, sequences shorter will be padded.",
         )
         parser.add_argument(
             "--max_target_length",
             default=60,  # 56
             type=int,
             help="The maximum total input sequence length after tokenization. Sequences longer "
-            "than this will be truncated, sequences shorter will be padded.",
+                 "than this will be truncated, sequences shorter will be padded.",
         )
 
         parser.add_argument(
@@ -553,8 +551,7 @@ class ClassificationTransformer(BaseTransformer):
             required=False,
             help="Add the T5 preamble e.g. Summarize this text.",
         )
-        
-        
+
         return parser
 
 
