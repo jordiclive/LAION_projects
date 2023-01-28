@@ -104,17 +104,17 @@ class BaseTransformer(pl.LightningModule):
             )
         else:
             self.tokenizer: PreTrainedTokenizer = tokenizer
-        # if self.hparams.precision == "bf16":
-        #     self.torchtype = torch.bfloat16
-        # else:
-        #     self.torchtype = torch.float16
+        if self.hparams.precision == "bf16":
+            self.torchtype = torch.bfloat16
+        else:
+            self.torchtype = torch.float16
         if model is None:
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
                 self.hparams.model_name_or_path,
                 from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
                 config=self.config,
                 cache_dir=cache_dir,
-                # torch_dtype=self.torchtype,
+                torch_dtype=self.torchtype,
             )
 
         else:
