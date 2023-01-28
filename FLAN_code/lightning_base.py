@@ -10,6 +10,7 @@ import torch.nn as nn
 import wandb
 from pytorch_lightning import Trainer
 from pytorch_lightning.plugins import DeepSpeedPlugin
+from pytorch_lightning.strategies import DeepSpeedStrategy
 from pytorch_lightning.utilities import rank_zero_info, rank_zero_only
 from transformers import (AdamW, AutoConfig, AutoModel,
                           AutoModelForPreTraining,
@@ -430,6 +431,54 @@ def generic_train(
     train_params["accumulate_grad_batches"] = model.hparams.accumulate_grad_batches
     train_params["precision"] = args.precision
     train_params["strategy"] = "deepspeed_stage_2"
+
+
+    deepspeed_config = {
+"fp16": {
+    "enabled": "auto",
+    "loss_scale": 0,
+    "loss_scale_window": 1000,
+    "initial_scale_power": 16,
+    "hysteresis": 2,
+    "min_loss_scale": 1
+},
+"optimizer": {
+    "type": "AdamW",
+    "params": {
+        "lr": "auto",
+        "betas": "auto",
+        "eps": "auto",
+        "weight_decay": "auto"
+    }
+},
+"scheduler": {
+    "type": "WarmupLR",
+    "params": {
+        "warmup_min_lr": "auto",
+        "warmup_max_lr": "auto",
+        "warmup_num_steps": "auto"
+    }
+},
+"zero_optimization": {
+    "stage": 2,
+    "allgather_partitions": True,
+    "allgather_bucket_size": 2e8,
+    "overlap_comm": True,
+    "reduce_scatter": True,
+    "reduce_bucket_size": 2e8,
+    "contiguous_gradients": True,
+    "cpu_offload": True
+},
+"gradient_accumulation_steps": "auto",
+"gradient_clipping": "auto",
+"steps_per_print": 2000,
+"train_batch_size": "auto",
+"train_micro_batch_size_per_gpu": "auto",
+"wall_clock_breakdown": False
+}
+    train_params["strategy"] = DeepSpeedStrategy(config=deepspeed_config)
+
+
     # from pytorch_lightning.strategies import DeepSpeedStrategy
     # train_params["strategy"] = DeepSpeedStrategy(
     #     stage=3,
