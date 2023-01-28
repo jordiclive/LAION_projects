@@ -104,7 +104,7 @@ class BaseTransformer(pl.LightningModule):
             )
         else:
             self.tokenizer: PreTrainedTokenizer = tokenizer
-        if self.hparams.dtype == "bf16":
+        if self.hparams.precision == "bf16":
             self.dtype = torch.bfloat16
         else:
             self.dtype = torch.float16
