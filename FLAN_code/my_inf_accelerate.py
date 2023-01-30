@@ -31,9 +31,9 @@ def print_rank0(*msg,rank):
         return
     print(*msg)
 
-def main(ckpt_path='checkpoint-curr-best_20221129_1037',model_name='flan-t5-xl',val_path='data/processed/val.parquet',kwargs = dict(
+def main(ckpt_path='/admin/home-jordiclive/LAION_projects/open_assistant_training/hf_checkpoint/',model_name='google/flan-t5-xxl',val_path='test/val.parquet',kwargs = dict(
     device_map="balanced_low_0",
-),batch_size=10,benchmark=None,max_source_length=512,target_length=150,hf_checkpoint=True,n_examples=21):
+),batch_size=1,benchmark=None,max_source_length=512,target_length=150,hf_checkpoint=True,n_examples=21):
     t_start = time.time()
     local_rank = int(os.getenv("LOCAL_RANK", "0"))
     world_size = torch.cuda.device_count()
@@ -46,16 +46,16 @@ def main(ckpt_path='checkpoint-curr-best_20221129_1037',model_name='flan-t5-xl',
     print_rank0(f"Loading model {model_name}",rank=rank)
     dtype = torch.bfloat16
     kwargs["torch_dtype"] = dtype
-
+    val = pd.read_parquet(val_path)
     if hf_checkpoint:
-        tokenizer = AutoTokenizer.from_pretrained(ckpt_path)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForSeq2SeqLM.from_pretrained(ckpt_path, **kwargs)
     else:
         tokenizer  = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name, **kwargs)
         model.load_state_dict(torch.load(ckpt_path))
 
-    val = pd.read_parquet(val_path)
+    
     val = val.sample(n=n_examples,random_state=1)
     inputs = list(val['source'])
     input_sentences = inputs
@@ -116,7 +116,7 @@ def main(ckpt_path='checkpoint-curr-best_20221129_1037',model_name='flan-t5-xl',
         ds.extend(d)
 
     df = pd.DataFrame({'source':bs,'prediction':cs,'target':list(val['target']), 'total_new_tokens':ds})
-    df.to_csv(f'test_outputs_{ckpt_path}.csv',index=False)
+    df.to_csv(f'test_outputs_new_jan_28.csv',index=False)
     # t_generate_span = time.time() - t_generate_start
     # for i, o, _ in generated:
     #     print_rank0(f"{'-' * 60}\nin={i}\nout={o}\n",rank=rank)
