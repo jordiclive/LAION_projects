@@ -4,8 +4,6 @@
 #SBATCH --job-name=flan
 #SBATCH --nodes 1
 #SBATCH --gres=gpu:8
-#SBATCH --ntasks-per-node=8
-#SBATCH --cpus-per-task=8
 #SBATCH --output=%x_%j.out
 
 #module load intelmpi
@@ -25,7 +23,7 @@
 #
 #export PYTHONFAULTHANDLER=1
 #
-#export CUDA_LAUNCH_BLOCKING=0
+export CUDA_LAUNCH_BLOCKING=0
 #export OMPI_MCA_mtl_base_verbose=1
 #export FI_EFA_ENABLE_SHM_TRANSFER=0
 #export FI_PROVIDER=efa
@@ -37,5 +35,5 @@ source /admin/home-jordiclive/jordan_flan/bin/activate
 cd /admin/home-jordiclive/LAION_projects/FLAN_code
 export TRANSFORMERS_CACHE=/admin/home-jordiclive/transformers_cache
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-srun --comment laion python train.py
+srun python train.py
 
