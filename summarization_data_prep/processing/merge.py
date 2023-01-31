@@ -18,7 +18,7 @@ def merge(dataset_items):
 def merge_datasets():
     if not os.path.exists("final_dataset"):
         os.makedirs("final_dataset")
-    train_sets = glob.glob("train*")
+    train_sets = glob.glob("*")
     train = merge(train_sets)
     train.to_parquet("train.parquet")
 
