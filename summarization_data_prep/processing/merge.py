@@ -34,6 +34,7 @@ def val_split():
         train, val = train_test_split(train, test_size=100)
         train.reset_index(inplace=True, drop=True)
         val.reset_index(inplace=True, drop=True)
+        set = set.split('/')[-1]
         train.to_parquet(f"train_{set}.parquet")
         val.to_parquet(f"val_{set}.parquet")
 
