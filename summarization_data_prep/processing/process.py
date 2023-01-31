@@ -681,7 +681,7 @@ for dataset, prompts in prompt_dict.items():
                 axis=1,
             )
             if main_dataset:
-                df_main = df[["prompt", "summary", "text", "contriever_cos"]]
+                df_main = df[["prompt", "text","summary",  "contriever_cos"]]
                 main_dataset = False
             else:
                 df_main = pd.concat(
