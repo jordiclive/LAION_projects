@@ -13,8 +13,8 @@ class CustomDataset(pl.LightningDataModule):
         val = False,
         num_samples=None,
     ):
-        self.source = dataset.source
-        self.target = dataset.target
+        self.source = dataset.text
+        self.target = dataset.summary
         self.dataset = dataset
         # if num_samples:
         #     self.dataset = self.dataset.select(list(range(0, num_samples)))
