@@ -427,10 +427,11 @@ def generic_train(
     # train_params['amp_backend'] = 'native'
 
     # train_params["accelerator"] = extra_train_kwargs.get("accelerator", None)
-
+    train_params["accelerator"] = 'gpu'
     train_params["accumulate_grad_batches"] = model.hparams.accumulate_grad_batches
     train_params["precision"] = args.precision
     train_params["strategy"] = "deepspeed_stage_2"
+    train_params["devices"] = args.gpus
 
 
     deepspeed_config = {
@@ -506,7 +507,7 @@ def generic_train(
     train_params["gradient_clip_val"] = args.gradient_clip_val
     train_params["val_check_interval"] = args.val_check_interval
     train_params["num_sanity_val_steps"] = args.num_sanity_val_steps
-    train_params["gpus"] = args.gpus
+    # train_params["gpus"] = args.gpus
     if model.hparams.local:
         train_params["precision"] = 32
         train_params["num_sanity_val_steps"] = 10
