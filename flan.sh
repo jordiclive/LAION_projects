@@ -31,7 +31,7 @@
 #export FI_EFA_TX_MIN_CREDITS=64
 #export NCCL_TREE_THRESHOLD=0
 
-export CUDA_LAUNCH_BLOCKING=1
+#export CUDA_LAUNCH_BLOCKING=1
 source /admin/home-jordiclive/jordan_flan/bin/activate
 cd /admin/home-jordiclive/LAION_projects/FLAN_code
 export TRANSFORMERS_CACHE=/admin/home-jordiclive/transformers_cache
