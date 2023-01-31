@@ -431,7 +431,7 @@ def generic_train(
     train_params["accumulate_grad_batches"] = model.hparams.accumulate_grad_batches
     train_params["precision"] = args.precision
     train_params["strategy"] = "deepspeed_stage_2"
-    train_params["devices"] = [0,1,2,3,4,5,6,7]
+    train_params["devices"] = 8
 
 
     deepspeed_config = {
