@@ -35,5 +35,5 @@ export CUDA_LAUNCH_BLOCKING=1
 source /admin/home-jordiclive/jordan_flan/bin/activate
 cd /admin/home-jordiclive/LAION_projects/FLAN_code
 export TRANSFORMERS_CACHE=/admin/home-jordiclive/transformers_cache
-
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 srun --comment laion --gpus 8 python train.py
