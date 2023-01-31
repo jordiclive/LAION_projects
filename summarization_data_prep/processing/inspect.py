@@ -4,9 +4,10 @@ import pandas as pd
 
 import glob
 for l in glob.glob('*.parquet'):
-    pf = ParquetFile(l)
-    first_ten_rows = next(pf.iter_batches(batch_size = 10))
-    df = pa.Table.from_batches([first_ten_rows]).to_pandas()
+    # pf = ParquetFile(l)
+    # first_ten_rows = next(pf.iter_batches(batch_size = 10))
+    # df = pa.Table.from_batches([first_ten_rows]).to_pandas()
+    df = pd.read_parquet(l)[:10]
 
     for i, row in df.iterrows():
         print(row['text'][:20])
