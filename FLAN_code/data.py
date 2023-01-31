@@ -15,6 +15,7 @@ class CustomDataset(pl.LightningDataModule):
     ):
         self.source = dataset.text
         self.target = dataset.summary
+        self.prompt = dataset.prompt
         self.dataset = dataset
         # if num_samples:
         #     self.dataset = self.dataset.select(list(range(0, num_samples)))
@@ -31,22 +32,15 @@ class CustomDataset(pl.LightningDataModule):
 
     def clean_text(self, text):
         text = text.strip()
-        # text = text.replace('Example of text:', '')
-        # text = text.replace('Example of Summary:', '')
-        # text = text.replace("\n", "")
-        # text = text.replace("``", "")
-        # text = text.replace('"', "")
-
         return text
 
-    def convert_to_features(self, source, target):
+    def convert_to_features(self, source, target,prompt):
         # Tokenize contexts and questions (as pairs of inputs)
 
         if self.print_text:
             print("Input Text: ", self.clean_text(source))
 
-        input_ = self.clean_text(source)
-        input_ = 'Summarize the following: '+input_.strip()
+        input_ = f"""{self.clean_text(prompt)} \n\n {self.clean_text(source)}"""
 
         target_ = self.clean_text(target)
 
@@ -70,7 +64,7 @@ class CustomDataset(pl.LightningDataModule):
 
     def __getitem__(self, index):
         source, targets = self.convert_to_features(
-            self.source[index], self.target[index]
+            self.source[index], self.target[index], self.prompt[index]
         )
 
         input_ids = source["input_ids"].squeeze()
