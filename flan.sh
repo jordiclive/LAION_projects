@@ -36,4 +36,4 @@ source /admin/home-jordiclive/jordan_flan/bin/activate
 cd /admin/home-jordiclive/LAION_projects/FLAN_code
 export TRANSFORMERS_CACHE=/admin/home-jordiclive/transformers_cache
 
-srun --comment laion python train.py
+srun --comment laion --gpus 8 python train.py
