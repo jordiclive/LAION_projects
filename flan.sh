@@ -2,10 +2,6 @@
 #SBATCH --account laion
 #SBATCH --partition="g80n60"
 #SBATCH --job-name=flan
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --gpus-per-task 8
-#SBATCH --cpus-per-gpu=12
 #SBATCH --output=%x_%j.out
 
 
