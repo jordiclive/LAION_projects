@@ -4,7 +4,7 @@
 #SBATCH --job-name=flan
 #SBATCH --nodes 1
 #SBATCH --cpus-per-gpu=12
-#SBATCH --gres=gpu:8
+#SBATCH --gpus=8
 #SBATCH --output=%x_%j.out
 
 #module load intelmpi
