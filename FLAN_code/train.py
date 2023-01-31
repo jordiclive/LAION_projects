@@ -579,8 +579,11 @@ def main():
             "./results",
             f"{time.strftime('%Y%m%d_%H%M')}",
         )
-        if not os.path.exists(args.output_dir):
-            os.makedirs(args.output_dir)
+        try:
+            if not os.path.exists(args.output_dir):
+                os.makedirs(args.output_dir)
+        except:
+            pass
     model = ClassificationTransformer(args)
 
     trainer = generic_train(model, args)
