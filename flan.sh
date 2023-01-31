@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account laion
-#SBATCH --partition="g80n140"
+#SBATCH --partition="g80n60"
 #SBATCH --job-name=flan
 #SBATCH --nodes 1
 #SBATCH --cpus-per-gpu=12
