@@ -468,6 +468,20 @@ prompt_dict = {
     },
 }
 
+common_prompts = {'main': ["Summarize in {r1}-{r2} words:",],"pruned_candidates":
+    ["Summarize:",
+            "Summarize this text:",
+            "Summarize this text in {r1}-{r2} words:",
+            ""]}
+
+def apply_strip(x):
+    return [i.strip() for i in x]
+
+for key, value in prompt_dict.items():
+    prompt_dict[key]['main'] = apply_strip(prompt_dict[key]['main']) + apply_strip(common_prompts['main'])
+    prompt_dict[key]['pruned_candidates'] = apply_strip(prompt_dict[key]['pruned_candidates']) + apply_strip(common_prompts['pruned_candidates'])
+print(prompt_dict)
+
 
 # xsum_prompts = [
 #     "Given the following news article, summarize the article in one sentence:"
