@@ -663,8 +663,9 @@ def get_prompted_comment(x, prompts, q1, q_mean, q2):
         print(prompt)
     return prompt.strip()
 
-
-path = "../scored_summarization_datasets/datasets/*"
+prompt_dict = {'wikipedia-summary':prompt_dict['wikipedia-summary']}
+path = "*"
+# path = "../scored_summarization_datasets/scored/*"
 for dataset, prompts in prompt_dict.items():
     main_dataset = True
     for k in glob.glob(path):
@@ -691,7 +692,8 @@ for dataset, prompts in prompt_dict.items():
     df_main = df_main.drop_duplicates(subset=["text", "summary"])
     df_main.reset_index(inplace=True, drop=True)
     df_main.to_parquet(f"{dataset}_prompted.parquet")
-    break
+    df_main = df_main[:1]
+    
 
 # l = ["approximately", "roughly", "about", "around", "~"]
 # V = df_main[df_main['prompt'].apply(lambda x: True if any(i in x for i in l) else False)]
