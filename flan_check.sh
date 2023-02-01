@@ -13,4 +13,4 @@ source /admin/home-jordiclive/jordan_flan/bin/activate
 cd /admin/home-jordiclive/LAION_projects/FLAN_code
 export TRANSFORMERS_CACHE=/admin/home-jordiclive/transformers_cache
 export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
-srun python train.py --train_batch_size 4 --val_check_interval 0.15
+srun python train.py --train_batch_size 8 --val_check_interval 0.15 --wb_name "bs8-retrain-more-prompts-13B"
