@@ -417,7 +417,7 @@ def generic_train(
         dirpath=odir,
         monitor="val_loss_epoch",
         mode="min",
-        save_top_k=2,
+        save_top_k=1,
     )
 
     train_params = {}
