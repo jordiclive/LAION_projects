@@ -395,6 +395,7 @@ def add_generic_args(parser, root_dir) -> None:
     parser.add_argument("--val_check_interval", type=float, default=0.15)
     parser.add_argument("--num_sanity_val_steps", type=int, default=-1)
     parser.add_argument("--debug_mode", type=bool, default=False)
+    parser.add_argument("--limit_val_batches", type=float, default=None)
 
 
 def generic_train(
@@ -513,6 +514,9 @@ def generic_train(
         train_params["num_sanity_val_steps"] = 10
         train_params["gpus"] = 0
         train_params["strategy"] = None
+
+    if args.limit_val_batches is not None:
+        train_params["limit_val_batches"] = args.limit_val_batches
 
     if args.resume_from_checkpoint is not None:
         train_params["resume_from_checkpoint"] = args.resume_from_checkpoint
