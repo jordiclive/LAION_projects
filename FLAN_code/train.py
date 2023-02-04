@@ -575,10 +575,15 @@ def main():
         os.environ['WANDB_API_KEY'] = 'd8216641d549f9bb3d0c5074baa39e15dfd55030'
 
     if args.output_dir is None:
+
         args.output_dir = os.path.join(
-            "./results",
+            "/fsx/home-jordiclive/checkpoints",
             f"{time.strftime('%Y%m%d_%H%M')}",
         )
+        # args.output_dir = os.path.join(
+        #     "./results",
+        #     f"{time.strftime('%Y%m%d_%H%M')}",
+        # )
         try:
             if not os.path.exists(args.output_dir):
                 os.makedirs(args.output_dir)
