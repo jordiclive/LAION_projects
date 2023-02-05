@@ -101,7 +101,7 @@ def generate(inputs, max_source_length=512, summarization_type=None, prompt=None
         min_length=5,
         no_repeat_ngram_size=3,
         skip_special_tokens=True,
-    )
+        truncation=True, max_length=512)
     return 1, result, 1
 
 inputs = [
