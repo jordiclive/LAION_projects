@@ -100,6 +100,7 @@ def generate(inputs, max_source_length=512, summarization_type=None, prompt=None
         num_beams=5,
         min_length=5,
         no_repeat_ngram_size=3,
+        skip_special_tokens=True,
     )
     return 1, result, 1
 
