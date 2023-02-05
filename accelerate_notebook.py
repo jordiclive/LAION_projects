@@ -2,8 +2,12 @@ import os
 import time
 
 import torch
-from transformers import (AutoConfig, AutoModelForCausalLM,
-                          AutoModelForSeq2SeqLM, AutoTokenizer)
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
+    AutoTokenizer,
+)
 
 model_name = "jordiclive/flan-t5-3b-summarizer"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -26,7 +30,8 @@ prompts = {
 }
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
-os.environ["TRANSFORMERS_CACHE"] =  "/admin/home-jordiclive/transformers_cache"
+os.environ["TRANSFORMERS_CACHE"] = "/admin/home-jordiclive/transformers_cache"
+
 
 def generate(inputs, max_source_length=512, summarization_type=None, prompt=None):
     """returns a list of zipped inputs, outputs and number of new tokens"""
@@ -36,7 +41,8 @@ def generate(inputs, max_source_length=512, summarization_type=None, prompt=None
 
     if summarization_type is not None:
         inputs = [f"{prompts[summarization_type].strip()} {i.strip()}" for i in inputs]
-
+    if summarization_type is None and prompt is None:
+        inputs = [f"Summarize the following: {i.strip()}" for i in inputs]
     input_tokens = tokenizer.batch_encode_plus(
         inputs,
         max_length=max_source_length,
@@ -110,10 +116,15 @@ Carrie: Eh‚Ä¶ Go out with him once more and if you‚Äôre bored again just
 _, outputs, _ = generate(inputs, summarization_type="conversation")
 print(outputs)
 
-_, outputs, _ = generate(inputs, summarization_type=None, prompt='Summarize the conversation in less than 8 words')
+_, outputs, _ = generate(
+    inputs,
+    summarization_type=None,
+    prompt="Summarize the conversation in less than 8 words",
+)
 print(outputs)
 
-inputs = ["""Produce an article summary including outlines of each paragraph of the following article: You must be 18 years old, live or work in New York State, permanent resident alien status and have no recent felony convictions. If you don't meet these requirements, your application will be denied. There are no special education requirements.;
+inputs = [
+    """Produce an article summary including outlines of each paragraph of the following article: You must be 18 years old, live or work in New York State, permanent resident alien status and have no recent felony convictions. If you don't meet these requirements, your application will be denied. There are no special education requirements.;
 , This can be obtained from the New York Secretary of State, Division of Licensing services; or get it from the New York State Notary Public Association by calling 1-877-484-4673.¬†
 
 
@@ -127,10 +138,16 @@ Do not worry.¬†The exam is only 40-multiple choice questions and you only nee
 You will also be thumb printed.¬†
 Latecomers are not admitted into the exam.
  It will be accompanied by your "Oath of Office" affidavit.
-, Include a $60 check made out to the "Secretary Of State".¬†Congratulations, your Notary Public license will arrive in the mail within 6 to 8 weeks."""]
+, Include a $60 check made out to the "Secretary Of State".¬†Congratulations, your Notary Public license will arrive in the mail within 6 to 8 weeks."""
+]
 
-_, outputs, _ = generate(inputs, summarization_type=None, prompt='one_sentence')
+_, outputs, _ = generate(
+    inputs,
+    summarization_type=None,
+)
 print(outputs)
-
-_, outputs, _ = generate(inputs, summarization_type=None, prompt='Summarize the article in less than 8 words')
+_, outputs, _ = generate(
+    inputs,
+    summarization_type='one_sentence'
+)
 print(outputs)
