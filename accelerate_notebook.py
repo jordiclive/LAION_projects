@@ -1,11 +1,6 @@
-import argparse
-import gc
-import math
 import os
 import time
 
-import fire
-import pandas as pd
 import torch
 from transformers import (AutoConfig, AutoModelForCausalLM,
                           AutoModelForSeq2SeqLM, AutoTokenizer)
