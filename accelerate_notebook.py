@@ -109,3 +109,28 @@ Carrie: Eh‚Ä¶ Go out with him once more and if you‚Äôre bored again just
 ]
 inputs, outputs, total_new_tokens = generate(inputs, summarization_type="conversation")
 print(outputs)
+
+inputs, outputs, total_new_tokens = generate(inputs, summarization_type=None, prompt='Summarize the conversation in less than 8 words')
+print(outputs)
+
+inputs = ["""Produce an article summary including outlines of each paragraph of the following article: You must be 18 years old, live or work in New York State, permanent resident alien status and have no recent felony convictions. If you don't meet these requirements, your application will be denied. There are no special education requirements.;
+, This can be obtained from the New York Secretary of State, Division of Licensing services; or get it from the New York State Notary Public Association by calling 1-877-484-4673.¬†
+
+
+Do not worry.¬†The exam is only 40-multiple choice questions and you only need to score 70%.¬† (That means you can even miss 12 and still pass.)
+
+,¬†There is a 60 percent failure rate for people who simply walk into the exam‚Äì‚Äìmore than likely this is due to them not studying.People who take an online class or attend the 5-hour class with the N.Y.S. Notary Association pass with a 99 percent rate.Membership is free with the association.
+¬†You do not need a job to qualify. In fact, this credential will certainly help you get a job if you are looking for a resume boost. The exam is given on a weekly basis in every major metropolitan area throughout N.Y. State except on state holidays.
+ Bring a government issued photo ID that is not expired and has your signature.¬†A driver's license is perfect.¬†Bring a check or money order for $15, payable to:¬† "Secretary of State".¬†You can also use a Visa/Mastercard debit/credit card at the door.¬†
+
+
+You will also be thumb printed.¬†
+Latecomers are not admitted into the exam.
+ It will be accompanied by your "Oath of Office" affidavit.
+, Include a $60 check made out to the "Secretary Of State".¬†Congratulations, your Notary Public license will arrive in the mail within 6 to 8 weeks."""]
+
+inputs, outputs, total_new_tokens = generate(inputs, summarization_type=None, prompt='one_sentence')
+print(outputs)
+
+inputs, outputs, total_new_tokens = generate(inputs, summarization_type=None, prompt='Summarize the article in less than 8 words')
+print(outputs)
