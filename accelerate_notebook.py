@@ -19,7 +19,7 @@ world_size = torch.cuda.device_count()
 target_length = 150
 max_source_length = 512
 
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name, **kwargs)
+# model = AutoModelForSeq2SeqLM.from_pretrained(model_name, **kwargs)
 prompts = {
     "article": "Produce an article summary of the following news article:",
     "one_sentence": "Given the following news article, summarize the article in one sentence:",
@@ -99,7 +99,6 @@ def generate(inputs, max_source_length=512, summarization_type=None, prompt=None
         inputs[0],
         num_beams=5,
         min_length=5,
-        max_new_tokens=target_length,
         no_repeat_ngram_size=3,
     )
     return 1, result, 1
