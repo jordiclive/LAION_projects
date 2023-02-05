@@ -21,11 +21,11 @@ max_source_length = 512
 
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name, **kwargs)
 prompts = {
-    "one_sentence": "Given the following news article, summarize the article in one sentence:",
-    "scitldr": "Given the following scientific article, provide a TL;DR summary:",
     "article": "Produce an article summary of the following news article:",
-    "bill": "Summarize the following proposed legislation (bill):",
+    "one_sentence": "Given the following news article, summarize the article in one sentence:",
     "conversation": "Briefly summarize in third person the following conversation:",
+    "scitldr": "Given the following scientific article, provide a TL;DR summary:",
+    "bill": "Summarize the following proposed legislation (bill):",
     "outlines": "Produce an article summary including outlines of each paragraph of the following article:",
 }
 
@@ -124,7 +124,7 @@ _, outputs, _ = generate(
 print(outputs)
 
 inputs = [
-    """Produce an article summary including outlines of each paragraph of the following article: You must be 18 years old, live or work in New York State, permanent resident alien status and have no recent felony convictions. If you don't meet these requirements, your application will be denied. There are no special education requirements.;
+    """You must be 18 years old, live or work in New York State, permanent resident alien status and have no recent felony convictions. If you don't meet these requirements, your application will be denied. There are no special education requirements.;
 , This can be obtained from the New York Secretary of State, Division of Licensing services; or get it from the New York State Notary Public Association by calling 1-877-484-4673.¬†
 
 
@@ -149,5 +149,12 @@ print(outputs)
 _, outputs, _ = generate(
     inputs,
     summarization_type='one_sentence'
+)
+print(outputs)
+
+_, outputs, _ = generate(
+    inputs,
+    summarization_type=None,
+    prompt="Summarize the conversation in less than 8 words",
 )
 print(outputs)
