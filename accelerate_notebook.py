@@ -19,7 +19,7 @@ world_size = torch.cuda.device_count()
 target_length = 150
 max_source_length = 512
 
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name, **kwargs)
+# model = AutoModelForSeq2SeqLM.from_pretrained(model_name, **kwargs)
 prompts = {
     "article": "Produce an article summary of the following news article:",
     "one_sentence": "Given the following news article, summarize the article in one sentence:",
@@ -72,6 +72,36 @@ def generate(inputs, max_source_length=512, summarization_type=None, prompt=None
     outputs = tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
     return inputs, outputs, total_new_tokens
+
+
+import torch
+from transformers import pipeline
+
+summarizer = pipeline("summarization", model_name, torch_dtype=torch.bfloat16)
+
+wall_of_text = "your words here"
+
+
+def generate(inputs, max_source_length=512, summarization_type=None, prompt=None):
+    """returns a list of zipped inputs, outputs and number of new tokens"""
+
+    if prompt is not None:
+        inputs = [f"{prompt.strip()} {i.strip()}" for i in inputs]
+
+    if summarization_type is not None:
+        inputs = [f"{prompts[summarization_type].strip()} {i.strip()}" for i in inputs]
+    if summarization_type is None and prompt is None:
+        inputs = [f"Summarize the following: {i.strip()}" for i in inputs]
+
+    result = summarizer(
+        inputs[0],
+        num_beams=5,
+        min_length=5,
+        no_repeat_ngram_size=3,
+        skip_special_tokens=True,
+        truncation=True,
+    )
+    return 1, result, 1
 
 
 inputs = [
@@ -146,10 +176,7 @@ _, outputs, _ = generate(
     summarization_type=None,
 )
 print(outputs)
-_, outputs, _ = generate(
-    inputs,
-    summarization_type='one_sentence'
-)
+_, outputs, _ = generate(inputs, summarization_type="one_sentence")
 print(outputs)
 
 _, outputs, _ = generate(
