@@ -13,4 +13,4 @@ source /admin/home-jordiclive/jordan_flan/bin/activate
 cd /admin/home-jordiclive/LAION_projects/FLAN_code
 export TRANSFORMERS_CACHE=/admin/home-jordiclive/transformers_cache
 export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
-srun python train.py --train_batch_size 4 --val_check_interval 0.5 --wb_name "13B-bs4-filter-0.7" --gradient_accumulation_steps 2 --learning_rate 0.0003 --data_path '/admin/home-jordiclive/LAION_projects/summarization_data_prep/processing/new_prompts/final_dataset/0.7_final_dataset'
+srun python train.py --train_batch_size 4 --val_check_interval 0.5 --wb_name "13B-bs4-filter-0.7_restart" --gradient_accumulation_steps 2 --learning_rate 0.0003 --data_path '/admin/home-jordiclive/LAION_projects/summarization_data_prep/processing/new_prompts/final_dataset/0.7_final_dataset' --resume_from_checkpoint "/fsx/home-jordiclive/checkpoints/20230205_1055/epoch=0-step=16275.ckpt/"
