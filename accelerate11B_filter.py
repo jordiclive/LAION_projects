@@ -77,7 +77,7 @@ inputs = [
 ]
 
 
-for k in  ["social","social1","social2"]:
+for k in  ["ten","5","100","summary","short"]:
     print('\n---------\n')
     print(example_prompts[k])
     print('\n')
@@ -115,7 +115,7 @@ Carrie: Very creative indeed :D
 Olivia: Maybe I‚Äôm weird, but come on, I don‚Äôt feel like going any more.
 Carrie: Eh‚Ä¶ Go out with him once more and if you‚Äôre bored again just tell him no."""
 ]
-for k in  ["ten","5","100","summary","short"]:
+for k in  ["social","social2","social3"]:
     print('\n---------\n')
     print(example_prompts[k])
     print('\n')
