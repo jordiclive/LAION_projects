@@ -6,7 +6,7 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     AutoTokenizer,
 )
-os.environ["TRANSFORMERS_CACHE"] = "/admin/home-jordiclive/transformers_cache"
+os.environ["TRANSFORMERS_CACHE"] = "/fsx/home-jordiclive/transformers_cache"
 os.environ["CUDA_VISIBLE_DEVICES"] ="0,1,2,3,4,5,6,7"
 
 model_name = "jordiclive/flan-t5-11b-summarizer-filtered"
