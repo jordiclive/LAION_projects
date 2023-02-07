@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2Se
 import torch
 # Convert lightning/ds ckpt.
 
-save_path = '/admin/home-jordiclive/LAION_projects/FLAN_code/results/20230128_2210/epoch=0-step=1.ckpt'
+save_path = '/fsx/home-jordiclive/checkpoints/filter_epoch1_check'
 output_path = "model_large.pt"
 convert_zero_checkpoint_to_fp32_state_dict(save_path, output_path)
 
