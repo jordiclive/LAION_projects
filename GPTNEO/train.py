@@ -15,13 +15,13 @@ import nltk
 import numpy as np
 import pandas as pd
 import torch
-from data import CustomDataset
 from lightning_base import BaseTransformer, add_generic_args, generic_train
 from pytorch_lightning.utilities import rank_zero_info, rank_zero_only
 from rouge_score import rouge_scorer, scoring
 from torch.utils.data import DataLoader
-from transformers.models.bart.modeling_bart import shift_tokens_right
 from torch import nn
+from data import DialogueDataCollator, PromptGeneratedDataset
+
 logger = logging.getLogger(__name__)
 ROUGE_KEYS = ["rouge1", "rouge2", "rougeL", "rougeLsum"]
 
@@ -236,10 +236,14 @@ class ClassificationTransformer(BaseTransformer):
 
     def freeze_embeds(self):
         """Freeze token embeddings and positional embeddings for bart, just token embeddings for t5."""
-        self.freeze_params(self.model.shared)
-        for d in [self.model.encoder, self.model.decoder]:
-            self.freeze_params(d.embed_tokens)
-            self.freeze_params(self.model.shared)
+        # self.freeze_params(self.model.shared)
+        # for d in [self.model.encoder, self.model.decoder]:
+        #     self.freeze_params(d.embed_tokens)
+        #     self.freeze_params(self.model.shared)
+        for n, p in self.model.named_parameters():
+            if "embed" in n:
+                p.requires_grad = False
+
 
     def ids_to_clean_text(self, generated_ids: List[int]):
         gen_text = self.tokenizer.batch_decode(
@@ -541,6 +545,11 @@ def main():
             "/fsx/home-jordiclive/gpt_checkpoints",
             f"{time.strftime('%Y%m%d_%H%M')}",
         )
+        # args.output_dir = os.path.join(
+        #     "results",
+        #     f"{time.strftime('%Y%m%d_%H%M')}",
+        # )
+
         # args.output_dir = os.path.join(
         #     "./results",
         #     f"{time.strftime('%Y%m%d_%H%M')}",
