@@ -445,24 +445,24 @@ def generic_train(
     train_params["accelerator"] = 'gpu'
     train_params["accumulate_grad_batches"] = model.hparams.accumulate_grad_batches
     train_params["precision"] = args.precision
-    train_params["strategy"] = "deepspeed_stage_2"
+    train_params["strategy"] = "deepspeed_stage_2_offload"
     train_params["devices"] = 8
 
 
-    deepspeed_config = {
-
-"zero_optimization": {
-    "stage": 2,
-    "allgather_partitions": True,
-    "allgather_bucket_size": 2e8,
-    "overlap_comm": True,
-    "reduce_scatter": True,
-    "reduce_bucket_size": 2e8,
-    "contiguous_gradients": True,
-    "cpu_offload": True
-},}
-    train_params["strategy"] = DeepSpeedStrategy(config=deepspeed_config)
-
+#     deepspeed_config = {
+# 
+# "zero_optimization": {
+#     "stage": 2,
+#     "allgather_partitions": True,
+#     "allgather_bucket_size": 2e8,
+#     "overlap_comm": True,
+#     "reduce_scatter": True,
+#     "reduce_bucket_size": 2e8,
+#     "contiguous_gradients": True,
+#     "offload_optimizer": True
+# },}
+#     train_params["strategy"] = DeepSpeedStrategy(config=deepspeed_config)
+#
 
 
 
