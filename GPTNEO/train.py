@@ -178,12 +178,12 @@ class ClassificationTransformer(BaseTransformer):
         )
 
         self.eval_min_length = self.hparams.eval_min_length
-        rank_zero_info(
-            "for decoding, eval_max_length={}, "
-            "eval_min_length={}, eval_beams={}".format(
-                self.eval_max_length, self.eval_min_length, self.eval_beams
-            )
-        )
+        # rank_zero_info(
+        #     "for decoding, eval_max_length={}, "
+        #     "eval_min_length={}, eval_beams={}".format(
+        #         self.eval_max_length, self.eval_min_length, self.eval_beams
+        #     )
+        # )
         if self.hparams.freeze_embeds:
             rank_zero_info('FREEZING embeddings')
             self.freeze_embeds()
