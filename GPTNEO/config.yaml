@@ -1,8 +1,8 @@
 #model_name_or_path: 't5-large'
-model_name_or_path: 'EleutherAI/pythia-13b-deduped'
+model_name_or_path: 'EleutherAI/gpt-neox-20b'
 # resume_from_checkpoint: "/admin/home-jordiclive/LAION_projects/FLAN_code/results/20230128_2007/epoch=0-step=1.ckpt"
-train_batch_size: 3
-eval_batch_size: 3
+train_batch_size: 1
+eval_batch_size: 1
 logger: wandb
 warmup_steps: 20
 learning_rate: 1e-5
@@ -31,7 +31,7 @@ visible_devices: "0,1,2,3,4,5,6,7"
 gpus: 8
 # visible_devices: "0,1,2,3,4,5,6,7"
 val_metric: 'val_loss_epoch'
-
+precision: 16
 #debug_mode: True
 # save_generations: True
 
