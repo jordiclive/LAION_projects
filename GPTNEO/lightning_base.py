@@ -449,18 +449,18 @@ def generic_train(
     train_params["devices"] = 8
 
 
-#     deepspeed_config = {
-#
-# "zero_optimization": {
-#     "stage": 2,
-#     "allgather_partitions": True,
-#     "allgather_bucket_size": 2e8,
-#     "overlap_comm": True,
-#     "reduce_scatter": True,
-#     "reduce_bucket_size": 2e8,
-#     "contiguous_gradients": True,
-#     "offload_optimizer": True
-# },}
+    deepspeed_config = {
+
+"zero_optimization": {
+    "stage": 2,
+    "allgather_partitions": True,
+    "allgather_bucket_size": 2e8,
+    "overlap_comm": True,
+    "reduce_scatter": True,
+    "reduce_bucket_size": 2e8,
+    "contiguous_gradients": True,
+    "offload_optimizer": True
+},}
     #deepspeed_config = {
 #     "fp16": {
 #         "enabled": "auto",
@@ -482,7 +482,7 @@ def generic_train(
 #     },
 #
 # }
-#     train_params["strategy"] = DeepSpeedStrategy(config=deepspeed_config)
+    train_params["strategy"] = DeepSpeedStrategy(config=deepspeed_config)
 #
 
 
