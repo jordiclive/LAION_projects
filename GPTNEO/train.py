@@ -158,19 +158,19 @@ class ClassificationTransformer(BaseTransformer):
         self.metric_names = ROUGE_KEYS
         self.decoder_start_token_id = None
 
-        self.eval_beams = (
-            self.model.config.num_beams
-            if self.hparams.eval_beams is None
-            else self.hparams.eval_beams
-        )
-        assert (
-                self.eval_beams >= 1
-        ), f"got self.eval_beams={self.eval_beams}. Need an integer > 1"
+        # self.eval_beams = (
+        #     8
+        #     if self.hparams.eval_beams is None
+        #     else self.hparams.eval_beams
+        # )
+        # assert (
+        #         self.eval_beams >= 1
+        # ), f"got self.eval_beams={self.eval_beams}. Need an integer > 1"
 
-        if self.hparams.eval_max_gen_length is not None:
-            self.eval_max_length = self.hparams.eval_max_gen_length
-        else:
-            self.eval_max_length = self.model.config.max_length
+        # if self.hparams.eval_max_gen_length is not None:
+        #     self.eval_max_length = self.hparams.eval_max_gen_length
+        # else:
+        #     self.eval_max_length = self.model.config.max_length
         self.val_metric = (
             self.default_val_metric
             if self.hparams.val_metric is None

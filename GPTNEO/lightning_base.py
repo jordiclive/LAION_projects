@@ -72,30 +72,30 @@ class BaseTransformer(pl.LightningModule):
         cache_dir = self.hparams.cache_dir if self.hparams.cache_dir else None
         self.model_name_or_path = self.hparams.model_name_or_path
 
-        if config is None:
-            self.config = AutoConfig.from_pretrained(
-                self.hparams.config_name
-                if self.hparams.config_name
-                else self.hparams.model_name_or_path,
-                **({"num_labels": num_labels} if num_labels is not None else {}),
-                cache_dir=cache_dir,
-                **config_kwargs,
-            )
-        else:
-            self.config: PretrainedConfig = config
+        # if config is None:
+        #     self.config = AutoConfig.from_pretrained(
+        #         self.hparams.config_name
+        #         if self.hparams.config_name
+        #         else self.hparams.model_name_or_path,
+        #         **({"num_labels": num_labels} if num_labels is not None else {}),
+        #         cache_dir=cache_dir,
+        #         **config_kwargs,
+        #     )
+        # else:
+        #     self.config: PretrainedConfig = config
 
-        extra_model_params = (
-            "encoder_layerdrop",
-            "decoder_layerdrop",
-            "dropout",
-            "attention_dropout",
-        )
-        for p in extra_model_params:
-            if getattr(self.hparams, p, None):
-                assert hasattr(
-                    self.config, p
-                ), f"model config doesn't have a `{p}` attribute"
-                setattr(self.config, p, getattr(self.hparams, p))
+        # extra_model_params = (
+        #     "encoder_layerdrop",
+        #     "decoder_layerdrop",
+        #     "dropout",
+        #     "attention_dropout",
+        # )
+        # for p in extra_model_params:
+        #     if getattr(self.hparams, p, None):
+        #         assert hasattr(
+        #             self.config, p
+        #         ), f"model config doesn't have a `{p}` attribute"
+        #         setattr(self.config, p, getattr(self.hparams, p))
         if tokenizer is None:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.hparams.tokenizer_name
@@ -113,7 +113,7 @@ class BaseTransformer(pl.LightningModule):
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.hparams.model_name_or_path,
                 from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
-                config=self.config,
+                # config=self.config,
                 cache_dir=cache_dir,
                 torch_dtype=torch.float16
             )
