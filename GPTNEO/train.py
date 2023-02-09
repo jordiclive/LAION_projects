@@ -158,19 +158,6 @@ class ClassificationTransformer(BaseTransformer):
         self.metric_names = ROUGE_KEYS
         self.decoder_start_token_id = None
 
-        # self.eval_beams = (
-        #     8
-        #     if self.hparams.eval_beams is None
-        #     else self.hparams.eval_beams
-        # )
-        # assert (
-        #         self.eval_beams >= 1
-        # ), f"got self.eval_beams={self.eval_beams}. Need an integer > 1"
-
-        # if self.hparams.eval_max_gen_length is not None:
-        #     self.eval_max_length = self.hparams.eval_max_gen_length
-        # else:
-        #     self.eval_max_length = self.model.config.max_length
         self.val_metric = (
             self.default_val_metric
             if self.hparams.val_metric is None
@@ -178,25 +165,18 @@ class ClassificationTransformer(BaseTransformer):
         )
 
         self.eval_min_length = self.hparams.eval_min_length
-        # rank_zero_info(
-        #     "for decoding, eval_max_length={}, "
-        #     "eval_min_length={}, eval_beams={}".format(
-        #         self.eval_max_length, self.eval_min_length, self.eval_beams
-        #     )
-        # )
+
         if self.hparams.freeze_embeds:
             rank_zero_info('FREEZING embeddings')
             self.freeze_embeds()
         self.loss_fct = CrossEntropyLoss()
 
     def _compute_loss(self, model, inputs):
-        # inputs = self._prepare_inputs(inputs)
 
         labels_mask = inputs.pop("label_masks")
         targets = inputs.pop("targets")
 
         outputs = model(input_ids=inputs["input_ids"], attention_mask=inputs.get("attention_mask", None))
-
         #self.tokenizer.decode(inputs['input_ids'][labels_mask])
         logits = outputs.logits
 
@@ -236,10 +216,6 @@ class ClassificationTransformer(BaseTransformer):
 
     def freeze_embeds(self):
         """Freeze token embeddings and positional embeddings for bart, just token embeddings for t5."""
-        # self.freeze_params(self.model.shared)
-        # for d in [self.model.encoder, self.model.decoder]:
-        #     self.freeze_params(d.embed_tokens)
-        #     self.freeze_params(self.model.shared)
         for n, p in self.model.named_parameters():
             if "embed" in n:
                 p.requires_grad = False
@@ -299,8 +275,6 @@ class ClassificationTransformer(BaseTransformer):
             self, batch: dict, batch_idx=None, dataloader_idx=None
     ) -> dict:
 
-        mask = batch['label_masks']
-        input = batch['input_ids']
         loss = self._step(batch, batch_idx)
 
         self.log(
@@ -313,11 +287,6 @@ class ClassificationTransformer(BaseTransformer):
             sync_dist=True,
         )
 
-        # if batch_idx == 0:
-        #     for k in range(input.shape[0]):
-        #         prompt = self.tokenizer.decode(input[k][~mask[k]][:-1])
-        #         self.generate(prompt = prompt, max_length=100)
-        # todo fix generation. left padding, max new tokens etc.
 
         return {"loss": loss}
 
@@ -540,20 +509,10 @@ def main():
         os.environ['WANDB_API_KEY'] = 'd8216641d549f9bb3d0c5074baa39e15dfd55030'
 
     if args.output_dir is None:
-
         args.output_dir = os.path.join(
             "/fsx/home-jordiclive/gpt_checkpoints",
             f"{time.strftime('%Y%m%d_%H%M')}",
         )
-        # args.output_dir = os.path.join(
-        #     "results",
-        #     f"{time.strftime('%Y%m%d_%H%M')}",
-        # )
-
-        # args.output_dir = os.path.join(
-        #     "./results",
-        #     f"{time.strftime('%Y%m%d_%H%M')}",
-        # )
         try:
             if not os.path.exists(args.output_dir):
                 os.makedirs(args.output_dir)

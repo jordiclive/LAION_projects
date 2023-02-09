@@ -72,30 +72,7 @@ class BaseTransformer(pl.LightningModule):
         cache_dir = self.hparams.cache_dir if self.hparams.cache_dir else None
         self.model_name_or_path = self.hparams.model_name_or_path
 
-        # if config is None:
-        #     self.config = AutoConfig.from_pretrained(
-        #         self.hparams.config_name
-        #         if self.hparams.config_name
-        #         else self.hparams.model_name_or_path,
-        #         **({"num_labels": num_labels} if num_labels is not None else {}),
-        #         cache_dir=cache_dir,
-        #         **config_kwargs,
-        #     )
-        # else:
-        #     self.config: PretrainedConfig = config
 
-        # extra_model_params = (
-        #     "encoder_layerdrop",
-        #     "decoder_layerdrop",
-        #     "dropout",
-        #     "attention_dropout",
-        # )
-        # for p in extra_model_params:
-        #     if getattr(self.hparams, p, None):
-        #         assert hasattr(
-        #             self.config, p
-        #         ), f"model config doesn't have a `{p}` attribute"
-        #         setattr(self.config, p, getattr(self.hparams, p))
         if tokenizer is None:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.hparams.tokenizer_name
@@ -156,11 +133,6 @@ class BaseTransformer(pl.LightningModule):
     def get_lr_scheduler(self):
         get_schedule_func = arg_to_scheduler[self.hparams.lr_scheduler]
 
-        # scheduler = deepspeed.runtime.lr_schedules.WarmupDecayLR(
-        #     self.opt,
-        #     warmup_num_steps=self.hparams.warmup_steps,
-        #     total_num_steps=self.total_steps(),
-        # )
         scheduler = get_schedule_func(
             self.opt,
             num_warmup_steps=self.hparams.warmup_steps,
@@ -191,44 +163,12 @@ class BaseTransformer(pl.LightningModule):
                 "weight_decay": 0.0,
             },
         ]
-        if self.hparams.adafactor:
-            optimizer = Adafactor(
-                optimizer_grouped_parameters,
-                lr=self.hparams.learning_rate,
-                scale_parameter=False,
-                relative_step=False,
-            )
 
-        else:
-            optimizer = AdamW(
-                optimizer_grouped_parameters,
-                lr=self.hparams.learning_rate,
-                eps=self.hparams.adam_epsilon,
-            )
-        # self.opt = optimizer
-
-        from deepspeed.runtime.fp16.onebit.adam import OnebitAdam
-        from deepspeed.ops.adam import FusedAdam
-        # self.opt = OnebitAdam(self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon)
-
-#         self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
-        # self.opt = AdamW(
-        #         self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon
-        #     )
         self.opt = AdamW(
                 self.model.parameters(),
                 lr=self.hparams.learning_rate,
                 eps=self.hparams.adam_epsilon,
             )
-#         self.opt = Adafactor(
-#                 self.model.parameters(),
-#                 lr=self.hparams.learning_rate,
-#                 scale_parameter=False,
-#                 relative_step=False,
-#             )
-        # scheduler = self.get_lr_scheduler()
-
-        # return self.opt#, [scheduler]
 
         scheduler = self.get_lr_scheduler()
 
@@ -449,31 +389,12 @@ def generic_train(
 
     train_params = {}
 
-    # if args.fp16:
-    # train_params["precision"] = "16"
-    # train_params["amp_level"] = "args.fp16_opt_level"
-    # train_params['amp_backend'] = 'native'
-
-    # train_params["accelerator"] = extra_train_kwargs.get("accelerator", None)
     train_params["accelerator"] = 'gpu'
     train_params["accumulate_grad_batches"] = model.hparams.accumulate_grad_batches
     train_params["precision"] = args.precision
     train_params["strategy"] = "deepspeed_stage_2"
     train_params["devices"] = 8
 
-
-#     deepspeed_config = {
-
-# "zero_optimization": {
-#     "stage": 2,
-#     "allgather_partitions": True,
-#     "allgather_bucket_size": 2e8,
-#     "overlap_comm": True,
-#     "reduce_scatter": True,
-#     "reduce_bucket_size": 2e8,
-#     "contiguous_gradients": True,
-#     "offload_optimizer": True
-# },}
     deepspeed_config = {
     "fp16": {
         "enabled": "auto",
@@ -530,7 +451,6 @@ def generic_train(
     if args.debug_mode:
         train_params["limit_train_batches"] = 100
         train_params["limit_val_batches"] = 30
-    # train_params['auto_scale_batch_size'] =True
     if args.logger_name == "wandb":
         from pytorch_lightning.loggers import WandbLogger
 

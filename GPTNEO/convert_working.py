@@ -34,7 +34,8 @@ ckpt_path = "new_model_large.pt"
 model.load_state_dict(torch.load(ckpt_path))
 model.save_pretrained('hf_checkpoint',torch_dtype=torch.bfloat16)
 
-
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer.save_pretrained('hf_checkpoint')
 
 
 # # save_path = '/admin/home-jordiclive/LAION_projects/FLAN_code/results/20230128_2007/epoch=0-step=1.ckpt'
