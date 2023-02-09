@@ -12,7 +12,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.plugins import DeepSpeedPlugin
 from pytorch_lightning.strategies import DeepSpeedStrategy
 from pytorch_lightning.utilities import rank_zero_info, rank_zero_only
-from transformers import (AdamW, AutoConfig, AutoModel,
+from transformers import ( AutoConfig, AutoModel,
                           AutoModelForPreTraining,
                           AutoModelForQuestionAnswering, AutoModelForSeq2SeqLM,
                           AutoModelForSequenceClassification,
@@ -24,7 +24,7 @@ from transformers.optimization import (
     get_linear_schedule_with_warmup, get_polynomial_decay_schedule_with_warmup)
 from transformers.utils.versions import require_version
 from pytorch_lightning.callbacks import LearningRateMonitor
-
+from torch.optim import AdamW
 import deepspeed
 
 logger = logging.getLogger(__name__)
@@ -109,13 +109,20 @@ class BaseTransformer(pl.LightningModule):
             self.torchtype = torch.bfloat16
         else:
             self.torchtype = torch.float16
+
+    
+#         config = AutoConfig.from_pretrained(
+#             self.hparams.model_name_or_path)
+#         config.gradient_checkpointing = True
         if model is None:
+            
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.hparams.model_name_or_path,
                 from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
-                # config=self.config,
+#                 config=config,
                 cache_dir=cache_dir,
-                torch_dtype=torch.float16
+                torch_dtype=torch.float16,
+                #revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
             )
 
         else:
@@ -204,15 +211,21 @@ class BaseTransformer(pl.LightningModule):
         from deepspeed.ops.adam import FusedAdam
         # self.opt = OnebitAdam(self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon)
 
-        self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
+#         self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
         # self.opt = AdamW(
         #         self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon
         #     )
-        # self.opt = AdamW(
-        #         self.model.parameters(),
-        #         lr=self.hparams.learning_rate,
-        #         eps=self.hparams.adam_epsilon,
-        #     )
+        self.opt = AdamW(
+                self.model.parameters(),
+                lr=self.hparams.learning_rate,
+                eps=self.hparams.adam_epsilon,
+            )
+#         self.opt = Adafactor(
+#                 self.model.parameters(),
+#                 lr=self.hparams.learning_rate,
+#                 scale_parameter=False,
+#                 relative_step=False,
+#             )
         # scheduler = self.get_lr_scheduler()
 
         # return self.opt#, [scheduler]
@@ -449,42 +462,43 @@ def generic_train(
     train_params["devices"] = 8
 
 
+#     deepspeed_config = {
+
+# "zero_optimization": {
+#     "stage": 2,
+#     "allgather_partitions": True,
+#     "allgather_bucket_size": 2e8,
+#     "overlap_comm": True,
+#     "reduce_scatter": True,
+#     "reduce_bucket_size": 2e8,
+#     "contiguous_gradients": True,
+#     "offload_optimizer": True
+# },}
     deepspeed_config = {
+    "fp16": {
+        "enabled": "auto",
+        "loss_scale": 0,
+        "loss_scale_window": 1000,
+        "initial_scale_power": 16,
+        "hysteresis": 2,
+        "min_loss_scale": 1
+    },
+    "zero_optimization": {
+        "stage": 2,
+        "allgather_partitions": True,
+        "allgather_bucket_size": 2e8,
+        "overlap_comm": True,
+        "reduce_scatter": True,
+        "reduce_bucket_size": 2e8,
+        "contiguous_gradients": True,
+        "cpu_offload": True
+    },
+        "zero_allow_untested_optimizer": True,
 
-"zero_optimization": {
-    "stage": 2,
-    "allgather_partitions": True,
-    "allgather_bucket_size": 2e8,
-    "overlap_comm": True,
-    "reduce_scatter": True,
-    "reduce_bucket_size": 2e8,
-    "contiguous_gradients": True,
-    "offload_optimizer": True
-},}
-    #deepspeed_config = {
-#     "fp16": {
-#         "enabled": "auto",
-#         "loss_scale": 0,
-#         "loss_scale_window": 1000,
-#         "initial_scale_power": 16,
-#         "hysteresis": 2,
-#         "min_loss_scale": 1
-#     },
-#     "zero_optimization": {
-#         "stage": 2,
-#         "allgather_partitions": True,
-#         "allgather_bucket_size": 2e8,
-#         "overlap_comm": True,
-#         "reduce_scatter": True,
-#         "reduce_bucket_size": 2e8,
-#         "contiguous_gradients": True,
-#         "cpu_offload": True
-#     },
-#
-# }
+}
     train_params["strategy"] = DeepSpeedStrategy(config=deepspeed_config)
-#
 
+ 
 
 
 
