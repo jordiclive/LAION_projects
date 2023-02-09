@@ -31,15 +31,15 @@ class DialogueDataCollator:
         for feature_one in features:
             assert len(feature_one) % 2 == 0, "Number of messages must be even"
             messages = [
-                (QA_SPECIAL_TOKENS["Question"] if i % 2 == 0 else "")
-                + x
+                # (QA_SPECIAL_TOKENS["Question"] if i % 2 == 0 else "")
+                x
                 + (QA_SPECIAL_TOKENS["Answer"] if i % 2 == 0 else "")
                 for i, x in enumerate(feature_one)
             ]
 
             # Add a way for the model to terminate generation
             # When we predict the start of a new expected question, we want to be able to stop generation
-            messages.append(QA_SPECIAL_TOKENS["Question"])
+            messages.append(self.tokenizer.eos_token)
 
             flatten_message = self.tokenizer(
                 "".join(messages),
@@ -129,23 +129,24 @@ if __name__ == "__main__":
     from transformers import AutoTokenizer
 
 
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-19m")
-
-    # tokenizer.add_special_tokens({"pad_token": "<|endoftext|>", "sep_token": "<|endoftext|>"})
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-    train = pd.read_json('train.json',orient='split')
-    dataset = PromptGeneratedDataset(train)
-    collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=128)
-    train_dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=5)
-    # for batch in dataloader:
+    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
+    # tokenizer.pad_token= "<|padding|>"
+    # tokenizer.pad_token_id = 1
+    tokenizer.add_special_tokens({"pad_token": "<|padding|>", "sep_token": "<|endoftext|>"})
+    # tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    # train = pd.read_json('test/train.json',orient='split')
+    # dataset = PromptGeneratedDataset(train)
+    # collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=128)
+    # train_dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=5)
+    # # for batch in dataloader:
     #     print(batch["input_ids"].shape)
 
-    val = pd.read_json('val.json',orient='split')
+    val = pd.read_json('test/val.json',orient='split')
     dataset = PromptGeneratedDataset(val)
-    collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=128)
+    collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=300)
     val_dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=5)
     # for batch in dataloader:
     #     print(batch["input_ids"].shape)
-
-
+    X = next(iter(val_dataloader))
+    tokenizer.decode(X['input_ids'][0])
     x = 1
