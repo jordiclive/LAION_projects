@@ -122,7 +122,7 @@ class BaseTransformer(pl.LightningModule):
 #                 config=config,
                 cache_dir=cache_dir,
                 torch_dtype=torch.float16,
-                #revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
+#                 revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
             )
 
         else:
