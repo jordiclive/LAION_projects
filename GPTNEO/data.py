@@ -10,7 +10,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 from transformers.tokenization_utils_base import PaddingStrategy, PreTrainedTokenizerBase
-QA_SPECIAL_TOKENS = {"Question": "<question>", "Answer": "<answer>"}
+QA_SPECIAL_TOKENS = {"Question": "User: ", "Answer": "<sp_token_answer>"}
 
 
 @dataclass
@@ -31,7 +31,7 @@ class DialogueDataCollator:
         for feature_one in features:
             assert len(feature_one) % 2 == 0, "Number of messages must be even"
             messages = [
-                # (QA_SPECIAL_TOKENS["Question"] if i % 2 == 0 else "")
+                (QA_SPECIAL_TOKENS["Question"] if i % 2 == 0 else "") +
                 x
                 + (QA_SPECIAL_TOKENS["Answer"] if i % 2 == 0 else "")
                 for i, x in enumerate(feature_one)
