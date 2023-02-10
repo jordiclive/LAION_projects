@@ -118,9 +118,9 @@ class BaseTransformer(pl.LightningModule):
 
         # todo complete
 
-        self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-        QA_SPECIAL_TOKENS = {"Question": "<question>", "Answer": "<answer>"}
-        self.new_tokens = ['<question>', '<answer>']
+        self.tokenizer.add_special_tokens({"pad_token": "<|padding|>", "sep_token": "<|endoftext|>"})
+
+        self.new_tokens = ['<sp_token_answer>']
         new_tokens_vocab = {}
         new_tokens_vocab["additional_special_tokens"] = []
         for idx, t in enumerate(self.new_tokens):
