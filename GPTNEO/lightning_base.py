@@ -99,9 +99,10 @@ class BaseTransformer(pl.LightningModule):
 #                 config=config,
                 cache_dir=cache_dir,
                 torch_dtype=torch.float16,
+                use_cache=False
 #                 revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
             )
-
+            self.model.gradient_checkpointing_enable()
         else:
             self.model = model
         self.target_lens = {
@@ -341,7 +342,7 @@ def add_generic_args(parser, root_dir) -> None:
         help="Number of updates steps to accumulate before performing a backward/update pass.",
     )
     parser.add_argument(
-        "--seed", type=int, default=42, help="random seed for initialization"
+        "--seed", type=int, default=1, help="random seed for initialization"
     )
     parser.add_argument(
         "--data_dir",

@@ -166,9 +166,9 @@ class ClassificationTransformer(BaseTransformer):
 
         self.eval_min_length = self.hparams.eval_min_length
 
-        if self.hparams.freeze_embeds:
-            rank_zero_info('FREEZING embeddings')
-            self.freeze_embeds()
+#         if self.hparams.freeze_embeds:
+#             rank_zero_info('FREEZING embeddings')
+#             self.freeze_embeds()
         self.loss_fct = CrossEntropyLoss()
 
     def _compute_loss(self, model, inputs):
@@ -336,8 +336,8 @@ class ClassificationTransformer(BaseTransformer):
     def validation_epoch_end(self, outputs: list) -> dict:
         if self.hparams.skip_val:
             return 0
-        gc.collect()
-        torch.cuda.empty_cache()
+#         gc.collect()
+#         torch.cuda.empty_cache()
 
     @staticmethod
     def add_model_specific_args(parser, root_dir):

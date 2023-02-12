@@ -77,7 +77,7 @@ class DialogueDataCollator:
             flatten_messages,
             padding=self.padding,
             max_length=self.max_length,
-            pad_to_multiple_of=self.pad_to_multiple_of,
+            pad_to_multiple_of=8,
             return_tensors="pt",
         )
         dim = batch["input_ids"].shape[-1]
