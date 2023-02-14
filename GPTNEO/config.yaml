@@ -1,18 +1,18 @@
 #model_name_or_path: 't5-large'
 model_name_or_path: 'EleutherAI/gpt-neox-20b'
 # resume_from_checkpoint: "/admin/home-jordiclive/LAION_projects/FLAN_code/results/20230128_2007/epoch=0-step=1.ckpt"
-train_batch_size: 4
-eval_batch_size: 4
+train_batch_size: 54
+eval_batch_size: 32
 logger: wandb
-warmup_steps: 500
+warmup_steps: 80
 learning_rate: 1e-5
-num_train_epochs: 4
-gradient_accumulation_steps: 2
+num_train_epochs: 18
+gradient_accumulation_steps: 1
 num_workers: 82
 adam_epsilon: 1e-8
 data_path: 'chip_data'
 wb_name: "redo_without_grad_20B"
-wb_project: "FLAN_Summarizer"
+wb_project: "Chip2"
 wb_entity: "jordanclive"
 val_check_interval: 1
 #skip_val: True
@@ -31,8 +31,9 @@ visible_devices: "0,1,2,3,4,5,6,7"
 gpus: 8
 # visible_devices: "0,1,2,3,4,5,6,7"
 val_metric: 'val_loss_epoch'
-precision: 16
+precision: "bf16"
 grad_checkpoint: True
+lr_flat: True
 #debug_mode: True
 # save_generations: True
 

@@ -21,7 +21,7 @@ from transformers import ( AutoConfig, AutoModel,
 from transformers.optimization import (
     Adafactor, get_cosine_schedule_with_warmup,
     get_cosine_with_hard_restarts_schedule_with_warmup,
-    get_linear_schedule_with_warmup, get_polynomial_decay_schedule_with_warmup)
+    get_linear_schedule_with_warmup, get_polynomial_decay_schedule_with_warmup,get_constant_schedule_with_warmup)
 from transformers.utils.versions import require_version
 from pytorch_lightning.callbacks import LearningRateMonitor
 from torch.optim import AdamW
@@ -87,10 +87,6 @@ class BaseTransformer(pl.LightningModule):
         else:
             self.torchtype = torch.float16
 
-    
-#         config = AutoConfig.from_pretrained(
-#             self.hparams.model_name_or_path)
-#         config.gradient_checkpointing = True
         if model is None:
             if self.hparams.grad_checkpoint:
                 self.model = AutoModelForCausalLM.from_pretrained(
@@ -98,7 +94,7 @@ class BaseTransformer(pl.LightningModule):
                     from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
                     #                 config=config,
                     cache_dir=cache_dir,
-                    torch_dtype=torch.float16,
+                    torch_dtype=self.torchtype,
                     use_cache=False,
                     #                 revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
                 )
@@ -110,7 +106,7 @@ class BaseTransformer(pl.LightningModule):
                     from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
     #                 config=config,
                     cache_dir=cache_dir,
-                    torch_dtype=torch.float16,
+                    torch_dtype=self.torchtype,
     #                 revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
                 )
 
@@ -136,12 +132,18 @@ class BaseTransformer(pl.LightningModule):
 
     def get_lr_scheduler(self):
         get_schedule_func = arg_to_scheduler[self.hparams.lr_scheduler]
+        if self.hparams.lr_flat:
+            scheduler = get_constant_schedule_with_warmup(
+                self.opt,
+                num_warmup_steps=self.hparams.warmup_steps,
+            )
+        else:
+            scheduler = get_schedule_func(
+                self.opt,
+                num_warmup_steps=self.hparams.warmup_steps,
+                num_training_steps=self.hparams.max_steps,
+            )
 
-        scheduler = get_schedule_func(
-            self.opt,
-            num_warmup_steps=self.hparams.warmup_steps,
-            num_training_steps=self.total_steps(),
-        )
         scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
         return scheduler
 
@@ -368,6 +370,8 @@ def add_generic_args(parser, root_dir) -> None:
     parser.add_argument("--debug_mode", type=bool, default=False)
     parser.add_argument("--limit_val_batches", type=float, default=None)
     parser.add_argument("--grad_checkpoint", type=bool, default=False)
+    parser.add_argument("--lr_flat", type=bool, default=False)
+
 
 def generic_train(
         model: BaseTransformer,
@@ -421,6 +425,8 @@ def generic_train(
         "zero_allow_untested_optimizer": True,
 
 }
+    if train_params["precision"] == "bf16":
+        deepspeed_config.pop('fp16')
     train_params["strategy"] = DeepSpeedStrategy(config=deepspeed_config)
 
  
