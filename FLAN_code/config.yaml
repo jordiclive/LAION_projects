@@ -14,7 +14,7 @@ data_path: '/admin/home-jordiclive/LAION_projects/summarization_data_prep/proces
 wb_name: "retrain-more-prompts-13B_grad_checkpoint"
 wb_project: "FLAN2"
 wb_entity: "jordanclive"
-val_check_interval: 0.5
+val_check_interval: 0.25
 #skip_val: True
 #limit_val_batches: None
 label_smoothing: 0
