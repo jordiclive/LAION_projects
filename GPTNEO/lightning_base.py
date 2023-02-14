@@ -126,7 +126,7 @@ class BaseTransformer(pl.LightningModule):
 
         # todo complete
 
-        tokenizer.add_special_tokens({"pad_token": "<|padding|>", "sep_token": "<|endoftext|>"})
+        self.tokenizer.add_special_tokens({"pad_token": "<|padding|>", "sep_token": "<|endoftext|>"})
 
 
 
