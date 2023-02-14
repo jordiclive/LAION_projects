@@ -1,94 +1,52 @@
-import pytorch_lightning as pl
+from torch.utils.data import Dataset
+from dataclasses import dataclass
+from typing import Optional, Union
 import torch
-
-
-class CustomDataset(pl.LightningDataModule):
-    def __init__(
-        self,
-        dataset,
-        tokenizer,
-        input_length,
-        output_length,
-        print_text=False,
-        val = False,
-        num_samples=None,
-    ):
-        self.source = dataset.text
-        self.target = dataset.summary
-        self.prompt = dataset.prompt
-        self.dataset = dataset
-        # if num_samples:
-        #     self.dataset = self.dataset.select(list(range(0, num_samples)))
-        self.input_length = input_length
-        self.tokenizer = tokenizer
-        self.output_length = output_length
-        self.print_text = print_text
-        self.val = val
-        if val:
-            self.ids = list(range(len(dataset)))
+from transformers.tokenization_utils_base import PaddingStrategy, PreTrainedTokenizerBase
+class BaseDataset(Dataset):
+    def __init__(self,df) -> None:
+        super().__init__()
+        self.pairs = list(zip(df['prompt'], df['text'],df['summary']))
 
     def __len__(self):
-        return len(self.source)
-
-    def clean_text(self, text):
-        text = text.strip()
-        return text
-
-    def convert_to_features(self, source, target,prompt):
-        # Tokenize contexts and questions (as pairs of inputs)
-
-        if self.print_text:
-            print("Input Text: ", self.clean_text(source))
-
-        input_ = f"""{self.clean_text(prompt)} \n\n {self.clean_text(source)}"""
-
-        target_ = self.clean_text(target)
-
-        source = self.tokenizer.batch_encode_plus(
-            [input_],
-            max_length=self.input_length,
-            padding="max_length",
-            truncation=True,
-            return_tensors="pt",
-        )
-
-        targets = self.tokenizer.batch_encode_plus(
-            [target_],
-            max_length=self.output_length,
-            padding="max_length",
-            truncation=True,
-            return_tensors="pt",
-        )
-
-        return source, targets
+        return len(self.pairs)
 
     def __getitem__(self, index):
-        source, targets = self.convert_to_features(
-            self.source[index], self.target[index], self.prompt[index]
-        )
+        prompt, source, text = self.pairs[index]
+        return prompt, source, text
 
-        input_ids = source["input_ids"].squeeze()
-        target_ids = targets["input_ids"].squeeze()
+@dataclass
+class DataCollator:
+    """
+    Expects a list of texts corresponding to a sequence of [question, answer, question, answer, ...] pairs.
+    """
 
-        src_mask = source["attention_mask"].squeeze()
-        target_mask = targets["attention_mask"].squeeze()
+    tokenizer: PreTrainedTokenizerBase
+    padding: Union[bool, str, PaddingStrategy] = True
+    input_length: Optional[int] = None
+    output_length: Optional[int] = None
+    pad_to_multiple_of: Optional[int] = None
 
-        if self.val:
-            ids = self.ids[index]
-            return {
-            "input_ids": input_ids,
-            "attention_mask": src_mask,
-            "labels": target_ids,
-            "target_mask": target_mask,
-            "index": ids
-        }
-        else:
+    def __call__(self, features):
 
-            return {
-                "input_ids": input_ids,
-                "attention_mask": src_mask,
-                "labels": target_ids,
-                "target_mask": target_mask,
-            }
+        batch = self.tokenizer.batch_encode_plus(
+                [f"""{i[0].strip()} \n\n {i[1].strip()}""" for i in features],
+                return_tensors="pt",
+                max_length=self.input_length,
+                padding=True,
+                truncation=True,
+            pad_to_multiple_of=8,
+            )
+        target = self.tokenizer.batch_encode_plus(
+                [i[2].strip() for i in features],
+                return_tensors="pt",
+                max_length=self.output_length,
+                padding=True,
+                truncation=True,
+            pad_to_multiple_of=8,
+            )
 
+        batch['labels'] = target['input_ids']
+        batch['taget_mask'] = target['attention_mask']
 
+        return batch

@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     val = pd.read_json('test/val.json',orient='split')
     dataset = PromptGeneratedDataset(val)
-    collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=300)
+    collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=100)
     val_dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=5)
     # for batch in dataloader:
     #     print(batch["input_ids"].shape)

@@ -110,14 +110,23 @@ class BaseTransformer(pl.LightningModule):
         else:
             self.torchtype = torch.float16
         if model is None:
-            self.model = AutoModelForSeq2SeqLM.from_pretrained(
-                self.hparams.model_name_or_path,
-                from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
-                config=self.config,
-                cache_dir=cache_dir,
-                torch_dtype=self.torchtype,
-            )
-            self.model.gradient_checkpointing_enable()
+            if self.hparams.grad_checkpoint:
+                self.model = AutoModelForSeq2SeqLM.from_pretrained(
+                    self.hparams.model_name_or_path,
+                    from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
+                    config=self.config,
+                    cache_dir=cache_dir,
+                    torch_dtype=self.torchtype,
+                )
+                self.model.gradient_checkpointing_enable()
+            else:
+                self.model = AutoModelForSeq2SeqLM.from_pretrained(
+                    self.hparams.model_name_or_path,
+                    from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
+                    config=self.config,
+                    cache_dir=cache_dir,
+                    torch_dtype=self.torchtype,
+                )
 
         else:
             self.model = model
@@ -397,7 +406,7 @@ def add_generic_args(parser, root_dir) -> None:
     parser.add_argument("--num_sanity_val_steps", type=int, default=-1)
     parser.add_argument("--debug_mode", type=bool, default=False)
     parser.add_argument("--limit_val_batches", type=float, default=None)
-
+    parser.add_argument("--grad_checkpoint", type=float, default=None)
 
 def generic_train(
         model: BaseTransformer,
