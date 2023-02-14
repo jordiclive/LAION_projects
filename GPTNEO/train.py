@@ -244,7 +244,6 @@ class ClassificationTransformer(BaseTransformer):
         if mode == "dev":
             data = pd.read_json(
                 Path(self.hparams.data_path).joinpath("val.json"), orient='split')
-            data['']
             dataset = PromptGeneratedDataset(data)
             collate_fn = DialogueDataCollator(self.tokenizer, padding=True, max_length=self.hparams.max_seq_length)
             dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=batch_size, shuffle=shuffle)
