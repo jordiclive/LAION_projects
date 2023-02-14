@@ -92,15 +92,27 @@ class BaseTransformer(pl.LightningModule):
 #             self.hparams.model_name_or_path)
 #         config.gradient_checkpointing = True
         if model is None:
-            
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.hparams.model_name_or_path,
-                from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
-#                 config=config,
-                cache_dir=cache_dir,
-                torch_dtype=torch.float16,
-#                 revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
-            )
+            if self.hparams.grad_checkpoint:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.hparams.model_name_or_path,
+                    from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
+                    #                 config=config,
+                    cache_dir=cache_dir,
+                    torch_dtype=torch.float16,
+                    use_cache=False,
+                    #                 revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
+                )
+                self.model.gradient_checkpointing_enable()
+
+            else:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.hparams.model_name_or_path,
+                    from_tf=bool(".ckpt" in self.hparams.model_name_or_path),
+    #                 config=config,
+                    cache_dir=cache_dir,
+                    torch_dtype=torch.float16,
+    #                 revision='6c3dee63e7c7e96311f4b57283b8fd39020a33aa'
+                )
 
         else:
             self.model = model
@@ -118,17 +130,9 @@ class BaseTransformer(pl.LightningModule):
 
         # todo complete
 
-        self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-        QA_SPECIAL_TOKENS = {"Question": "<question>", "Answer": "<answer>"}
-        self.new_tokens = ['<question>', '<answer>']
-        new_tokens_vocab = {}
-        new_tokens_vocab["additional_special_tokens"] = []
-        for idx, t in enumerate(self.new_tokens):
-            new_tokens_vocab["additional_special_tokens"].append(t)
-        num_added_toks = self.tokenizer.add_special_tokens(new_tokens_vocab)
-        rank_zero_info("We have added %s tokens", num_added_toks)
+        tokenizer.add_special_tokens({"pad_token": "<|padding|>", "sep_token": "<|endoftext|>"})
 
-        self.model.resize_token_embeddings(len(self.tokenizer))
+
 
     def get_lr_scheduler(self):
         get_schedule_func = arg_to_scheduler[self.hparams.lr_scheduler]
@@ -363,7 +367,7 @@ def add_generic_args(parser, root_dir) -> None:
     parser.add_argument("--num_sanity_val_steps", type=int, default=-1)
     parser.add_argument("--debug_mode", type=bool, default=False)
     parser.add_argument("--limit_val_batches", type=float, default=None)
-
+    parser.add_argument("--grad_checkpoint", type=bool, default=False)
 
 def generic_train(
         model: BaseTransformer,

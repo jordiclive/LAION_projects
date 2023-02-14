@@ -166,7 +166,7 @@ class ClassificationTransformer(BaseTransformer):
 
         self.eval_min_length = self.hparams.eval_min_length
 
-        if self.hparams.freeze_embeds:
+        if self.hparams.freeze_embeds and not self.hparams.grad_checkpoint:
             rank_zero_info('FREEZING embeddings')
             self.freeze_embeds()
         self.loss_fct = CrossEntropyLoss()
@@ -244,7 +244,7 @@ class ClassificationTransformer(BaseTransformer):
         if mode == "dev":
             data = pd.read_json(
                 Path(self.hparams.data_path).joinpath("val.json"), orient='split')
-
+            data['']
             dataset = PromptGeneratedDataset(data)
             collate_fn = DialogueDataCollator(self.tokenizer, padding=True, max_length=self.hparams.max_seq_length)
             dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=batch_size, shuffle=shuffle)

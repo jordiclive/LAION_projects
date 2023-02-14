@@ -10,7 +10,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 from transformers.tokenization_utils_base import PaddingStrategy, PreTrainedTokenizerBase
-QA_SPECIAL_TOKENS = {"Question": "User: ", "Answer": "<sp_token_answer>"}
+QA_SPECIAL_TOKENS = {"Question": "User: ", "Answer": "\n\nOA:"}
 
 
 @dataclass
@@ -29,16 +29,19 @@ class DialogueDataCollator:
         label_masks = []
 
         for feature_one in features:
+
             assert len(feature_one) % 2 == 0, "Number of messages must be even"
             messages = [
                 (QA_SPECIAL_TOKENS["Question"] if i % 2 == 0 else "") +
-                x
+                x.strip()
                 + (QA_SPECIAL_TOKENS["Answer"] if i % 2 == 0 else "")
                 for i, x in enumerate(feature_one)
             ]
 
             # Add a way for the model to terminate generation
             # When we predict the start of a new expected question, we want to be able to stop generation
+            messages[1] += self.tokenizer.eos_token
+
             messages.append(self.tokenizer.eos_token)
 
             flatten_message = self.tokenizer(
@@ -48,7 +51,7 @@ class DialogueDataCollator:
                 return_offsets_mapping=True,
             )
 
-            message_change_indices = np.cumsum([len(x) for x in messages[:-1]])
+            message_change_indices = np.cumsum([len(x)-1 for x in messages[:-1]])
             # for each token an integer indicating the index of the message it belongs to. Just to create the label mask.
             # Label mask is true when predicting a token that is part of the answer, false otherwise.
             # TEXT:             Question: Hello, how are you? Answer: I am fine. Question: What is your name? Answer: My name is John. Question:
@@ -62,12 +65,13 @@ class DialogueDataCollator:
                     list(map(lambda x: x[1], flatten_message["offset_mapping"])),
                 )
             )
-            label_mask = np.roll(list(map(lambda x: x % 2 == 1, message_indices)), -1, -1)
+            label_mask = np.roll(list(map(lambda x: x % 2 == 1, message_indices)), 1, -1)
             try:
                 label_mask[[i for i in range(len(message_indices)) if message_indices[i] == -2][0] - 1] = True
             except IndexError:
                 # due to truncation, we might not have the last termination token
                 label_mask[-1] = False
+
 
             label_masks.append(label_mask)
 
@@ -81,38 +85,31 @@ class DialogueDataCollator:
             return_tensors="pt",
         )
         dim = batch["input_ids"].shape[-1]
+        # dim1 = batch["input_ids"].shape[0]
+
+        # torch.cat(x,(torch.ones( dim, dtype=torch.bool)), dim=1)
+        # torch.cat((torch.tensor(x), torch.tensor([True])))
+        # batch["label_masks"] = torch.stack(
+        #     [F.pad(torch.cat((torch.tensor(x), torch.tensor([True]))), (0, dim - len(x)-1), value=False) for x in label_masks]
+        # )
 
         batch["label_masks"] = torch.stack(
             [F.pad(torch.tensor(x), (0, dim - len(x)), value=False) for x in label_masks]
         )
+        #
+        # batch["label_masks"] = torch.stack(
+        #     [F.pad(torch.tensor(x), (0, dim - len(x)), value=False) for x in label_masks]
+        # )
         batch["targets"] = torch.roll(batch["input_ids"], -1, -1)
 
         return batch
 
 
+
 class PromptGeneratedDataset(Dataset):
-    """Generates from flan 11B
-    User: What are the best methods for preventing a slave trade?
-
-    Rosey: The best methods ....
-    <|endoftext|>
-
-    we are ignoring results with multiple lines for now
-    """
-
-    url = "https://github.com/Rallio67/language-model-agents/raw/main/chat_dialogue_v2_c.txt"
-
     def __init__(self,df) -> None:
         super().__init__()
 
-        # df = pd.read_json('train.json',orient='split')
-        # df.reset_index(inplace=True,drop= True)
-        # val = df.sample(frac=0.1,random_state=42)
-        # train = df[~df.index.isin(val.index)]
-        # train.reset_index(inplace=True,drop= True)
-        # val.reset_index(inplace=True,drop=True)
-        # train.to_json('train.json',orient='split')
-        # val.to_json('val.json',orient='split')
         self.pairs = list(zip(df['source'], df['target']))
 
 
@@ -138,15 +135,17 @@ if __name__ == "__main__":
     # dataset = PromptGeneratedDataset(train)
     # collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=128)
     # train_dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=5)
-    # # for batch in dataloader:
+   # # for batch in dataloader:
     #     print(batch["input_ids"].shape)
 
     val = pd.read_json('test/val.json',orient='split')
     dataset = PromptGeneratedDataset(val)
-    collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=100)
+    collate_fn = DialogueDataCollator(tokenizer, padding=True, max_length=400)
     val_dataloader = DataLoader(dataset, collate_fn=collate_fn, batch_size=5)
     # for batch in dataloader:
     #     print(batch["input_ids"].shape)
     X = next(iter(val_dataloader))
     tokenizer.decode(X['input_ids'][0])
+    print(tokenizer.decode(X['input_ids'][0]))
+    print(tokenizer.decode(X['input_ids'][0][X['label_masks'][0]]))
     x = 1

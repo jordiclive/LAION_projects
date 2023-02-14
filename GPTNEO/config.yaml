@@ -32,6 +32,7 @@ gpus: 8
 # visible_devices: "0,1,2,3,4,5,6,7"
 val_metric: 'val_loss_epoch'
 precision: 16
+grad_checkpoint: True
 #debug_mode: True
 # save_generations: True
 
