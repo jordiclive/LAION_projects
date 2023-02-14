@@ -117,6 +117,7 @@ class BaseTransformer(pl.LightningModule):
                 cache_dir=cache_dir,
                 torch_dtype=self.torchtype,
             )
+            self.model.gradient_checkpointing_enable()
 
         else:
             self.model = model
@@ -190,15 +191,15 @@ class BaseTransformer(pl.LightningModule):
         from deepspeed.ops.adam import FusedAdam
         # self.opt = OnebitAdam(self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon)
 
-        self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
+#         self.opt = FusedAdam(self.model.parameters(), lr=self.hparams.learning_rate, eps=self.hparams.adam_epsilon)
         # self.opt = AdamW(
         #         self.model.parameters(), lr=self.hparams.learning_rate,eps=self.hparams.adam_epsilon
         #     )
-        # self.opt = AdamW(
-        #         self.model.parameters(),
-        #         lr=self.hparams.learning_rate,
-        #         eps=self.hparams.adam_epsilon,
-        #     )
+        self.opt = AdamW(
+                self.model.parameters(),
+                lr=self.hparams.learning_rate,
+                eps=self.hparams.adam_epsilon,
+            )
         # scheduler = self.get_lr_scheduler()
 
         # return self.opt#, [scheduler]
