@@ -132,15 +132,15 @@ class BaseTransformer(pl.LightningModule):
             self.model = model
         self.target_lens = {
             "train": self.hparams.max_target_length,
-            "val": self.hparams.test_max_target_length,
-            "test": self.hparams.test_max_target_length,
+            "val": self.hparams.max_target_length,
+            "test": self.hparams.max_target_length,
         }
-        assert (
-                self.target_lens["train"] <= self.target_lens["val"]
-        ), f"target_lens: {self.target_lens}"
-        assert (
-                self.target_lens["train"] <= self.target_lens["test"]
-        ), f"target_lens: {self.target_lens}"
+#         assert (
+#                 self.target_lens["train"] <= self.target_lens["val"]
+#         ), f"target_lens: {self.target_lens}"
+#         assert (
+#                 self.target_lens["train"] <= self.target_lens["test"]
+#         ), f"target_lens: {self.target_lens}"
 
     def get_lr_scheduler(self):
         get_schedule_func = arg_to_scheduler[self.hparams.lr_scheduler]
@@ -406,7 +406,7 @@ def add_generic_args(parser, root_dir) -> None:
     parser.add_argument("--num_sanity_val_steps", type=int, default=-1)
     parser.add_argument("--debug_mode", type=bool, default=False)
     parser.add_argument("--limit_val_batches", type=float, default=None)
-    parser.add_argument("--grad_checkpoint", type=float, default=None)
+    parser.add_argument("--grad_checkpoint", type=bool, default=False)
 
 def generic_train(
         model: BaseTransformer,
