@@ -170,9 +170,9 @@ class ClassificationTransformer(BaseTransformer):
                 self.eval_max_length, self.eval_min_length, self.eval_beams
             )
         )
-        if self.hparams.freeze_embeds:
-            rank_zero_info('FREEZING embeddings')
-            self.freeze_embeds()
+#         if self.hparams.freeze_embeds:
+#             rank_zero_info('FREEZING embeddings')
+#             self.freeze_embeds()
 
     def freeze_params(self, model):
         """Set requires_grad=False for each of model.parameters()"""
