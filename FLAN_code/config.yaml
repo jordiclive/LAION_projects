@@ -18,8 +18,8 @@ val_check_interval: 0.5
 #skip_val: True
 #limit_val_batches: None
 label_smoothing: 0
-max_seq_length: 412
-max_target_length: 150
+max_seq_length: 416
+max_target_length: 152
 eval_max_gen_length: 150
 freeze_embeds: True
 num_sanity_val_steps: -1

@@ -15,7 +15,7 @@ import nltk
 import numpy as np
 import pandas as pd
 import torch
-from data import CustomDataset
+from data import BaseDataset,DataCollator
 from lightning_base import BaseTransformer, add_generic_args, generic_train
 from pytorch_lightning.utilities import rank_zero_info, rank_zero_only
 from rouge_score import rouge_scorer, scoring
@@ -170,9 +170,9 @@ class ClassificationTransformer(BaseTransformer):
                 self.eval_max_length, self.eval_min_length, self.eval_beams
             )
         )
-#         if self.hparams.freeze_embeds:
-#             rank_zero_info('FREEZING embeddings')
-#             self.freeze_embeds()
+        if not self.hparams.grad_checkpoint and self.hparams.freeze_embeds:
+            rank_zero_info('FREEZING embeddings')
+            self.freeze_embeds()
 
     def freeze_params(self, model):
         """Set requires_grad=False for each of model.parameters()"""
@@ -240,22 +240,7 @@ class ClassificationTransformer(BaseTransformer):
             sync_dist=True,
         )
 
-        # logs = {"loss": loss}
-        # tokens per batch
-        # logs["tpb"] = (
-        #    batch["input_ids"].ne(self.pad).sum() + batch["labels"].ne(self.pad).sum()
-        # )
-        # logs["bs"] = batch["input_ids"].shape[0]
-        # logs["src_pad_tok"] = batch["input_ids"].eq(self.pad).sum()
-        # logs["src_pad_frac"] = batch["input_ids"].eq(self.pad).float().mean()
 
-        # for k,v in logs.items():
-        #     self.log(k,v,sync_dist=True)
-        # self.log(
-        #     "rate",
-        #     self.trainer.lr_schedulers[0]["scheduler"].get_last_lr()[-1],
-        #     rank_zero_only=True,
-        # )
         torch.cuda.empty_cache()
         return {"loss": loss}
 
@@ -268,32 +253,28 @@ class ClassificationTransformer(BaseTransformer):
         if mode == "dev":
             data = pd.read_parquet(
                 Path(self.hparams.data_path).joinpath("val.parquet"))
-            data = CustomDataset(
-                data,
-                self.tokenizer,
-                input_length=self.hparams.max_seq_length,
-                output_length=self.hparams.max_target_length, val=True
-            )
+            data = BaseDataset(data)
+            collate_fn = DataCollator(self.tokenizer, padding=True, input_length=self.hparams.max_seq_length,
+                output_length=self.hparams.max_target_length)
 
-            val = DataLoader(
+            return DataLoader(
                 data,
+                collate_fn= collate_fn,
                 batch_size=batch_size,
                 shuffle=shuffle,
                 num_workers=self.hparams.num_workers,
             )
-            return val
 
         if mode == "train":
             data = pd.read_parquet(
                 Path(self.hparams.data_path).joinpath("train.parquet"))
-            data = CustomDataset(
-                data,
-                self.tokenizer,
-                input_length=self.hparams.max_seq_length,
-                output_length=self.hparams.max_target_length,
-            )
+            data = BaseDataset(data)
+            collate_fn = DataCollator(self.tokenizer, padding=True, input_length=self.hparams.max_seq_length,
+                                      output_length=self.hparams.max_target_length)
+
             return DataLoader(
                 data,
+                collate_fn=collate_fn,
                 batch_size=batch_size,
                 shuffle=shuffle,
                 num_workers=self.hparams.num_workers,
